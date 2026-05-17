@@ -53,3 +53,4 @@ app.*.symbols
 #AI Skills
 skills-lock.json
 .agents/
+.github/agents/
