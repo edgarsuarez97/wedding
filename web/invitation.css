@@ -1,0 +1,121 @@
+:root {
+  --rose: #f8e1e7;
+  --mint: #bed7d1;
+  --lavender: #f7c4f7;
+  --blush: #f8d1e0;
+}
+
+body {
+  margin: 0;
+  background: #ffffff;
+}
+
+.loading-invitation {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  overflow: hidden;
+  background: linear-gradient(145deg, #fff 10%, var(--rose) 45%, var(--mint) 100%);
+  display: grid;
+  place-items: center;
+  animation: fadeOut 0.8s ease 2.3s forwards;
+}
+
+.loading-invitation::before,
+.loading-invitation::after {
+  content: '';
+  position: absolute;
+  width: 45vmax;
+  height: 45vmax;
+  border-radius: 50%;
+  filter: blur(12px);
+  opacity: 0.4;
+}
+
+.loading-invitation::before {
+  top: -12vmax;
+  left: -10vmax;
+  background: radial-gradient(circle, var(--lavender), transparent 65%);
+  animation: drift 8s ease-in-out infinite;
+}
+
+.loading-invitation::after {
+  right: -14vmax;
+  bottom: -16vmax;
+  background: radial-gradient(circle, var(--blush), transparent 65%);
+  animation: drift 8s ease-in-out infinite reverse;
+}
+
+.envelope {
+  width: min(320px, 74vw);
+  height: min(220px, 52vw);
+  perspective: 900px;
+}
+
+.envelope-body {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 18px 40px rgba(90, 72, 79, 0.2);
+  overflow: hidden;
+}
+
+.envelope-flap {
+  position: absolute;
+  inset: 0;
+  transform-origin: top;
+  background: linear-gradient(120deg, var(--mint), var(--lavender));
+  clip-path: polygon(0 0, 100% 0, 50% 52%);
+  animation: openFlap 1.2s cubic-bezier(0.18, 0.87, 0.31, 1.01) 0.4s forwards;
+}
+
+.invitation-note {
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  bottom: 16%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-family: "Georgia", serif;
+  text-align: center;
+  letter-spacing: 0.08em;
+  color: #43535f;
+  background: rgba(255, 255, 255, 0.92);
+  transform: translateY(46px);
+  opacity: 0;
+  animation: revealNote 1s ease 1.2s forwards;
+}
+
+@keyframes openFlap {
+  to {
+    transform: rotateX(168deg);
+    opacity: 0.25;
+  }
+}
+
+@keyframes revealNote {
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  to {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+}
+
+@keyframes drift {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(4%, -5%) scale(1.08);
+  }
+}
