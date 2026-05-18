@@ -197,21 +197,37 @@ class _WeddingExperienceState extends State<_WeddingExperience> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Expanded(
-                              child: _StorySection(story: widget.content.story),
+                              child: _ScrollReveal(
+                                from: _RevealFrom.left,
+                                child: _StorySection(
+                                  story: widget.content.story,
+                                ),
+                              ),
                             ),
                             SizedBox(width: 28),
                             Expanded(
-                              child: _ScheduleSection(
-                                schedule: widget.content.schedule,
+                              child: _ScrollReveal(
+                                from: _RevealFrom.right,
+                                child: _ScheduleSection(
+                                  schedule: widget.content.schedule,
+                                ),
                               ),
                             ),
                           ],
                         )
                       : Column(
                           children: [
-                            _StorySection(story: widget.content.story),
+                            _ScrollReveal(
+                              from: _RevealFrom.left,
+                              child: _StorySection(story: widget.content.story),
+                            ),
                             SizedBox(height: 28),
-                            _ScheduleSection(schedule: widget.content.schedule),
+                            _ScrollReveal(
+                              from: _RevealFrom.right,
+                              child: _ScheduleSection(
+                                schedule: widget.content.schedule,
+                              ),
+                            ),
                           ],
                         ),
                 ),
@@ -222,40 +238,174 @@ class _WeddingExperienceState extends State<_WeddingExperience> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Expanded(
-                              child: _GallerySection(
-                                images: widget.content.galleryImageUrls,
+                              child: _ScrollReveal(
+                                from: _RevealFrom.left,
+                                child: _GallerySection(
+                                  images: widget.content.galleryImageUrls,
+                                ),
                               ),
                             ),
                             SizedBox(width: 28),
                             Expanded(
-                              child: _VideoSection(
-                                videoUrl: widget.content.videoUrl,
+                              child: _ScrollReveal(
+                                from: _RevealFrom.right,
+                                child: _VideoSection(
+                                  videoUrl: widget.content.videoUrl,
+                                ),
                               ),
                             ),
                           ],
                         )
                       : Column(
                           children: [
-                            _GallerySection(
-                              images: widget.content.galleryImageUrls,
+                            _ScrollReveal(
+                              from: _RevealFrom.left,
+                              child: _GallerySection(
+                                images: widget.content.galleryImageUrls,
+                              ),
                             ),
                             SizedBox(height: 28),
-                            _VideoSection(videoUrl: widget.content.videoUrl),
+                            _ScrollReveal(
+                              from: _RevealFrom.right,
+                              child: _VideoSection(
+                                videoUrl: widget.content.videoUrl,
+                              ),
+                            ),
                           ],
                         ),
                 ),
-                const _SectionContainer(
+                _SectionContainer(
                   background: Colors.white,
-                  child: _RsvpSection(),
+                  child: _ScrollReveal(
+                    from: _RevealFrom.left,
+                    child: const _RsvpSection(),
+                  ),
                 ),
-                const _SectionContainer(
+                _SectionContainer(
                   background: Color(0xFFFFFAFE),
-                  child: _VenueAndFaqSection(),
+                  child: _ScrollReveal(
+                    from: _RevealFrom.right,
+                    child: const _VenueAndFaqSection(),
+                  ),
                 ),
               ],
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+enum _RevealFrom { left, right }
+
+class _ScrollReveal extends StatefulWidget {
+  const _ScrollReveal({
+    required this.child,
+    this.from = _RevealFrom.left,
+    this.delayMs = 0,
+  });
+
+  final Widget child;
+  final _RevealFrom from;
+  final int delayMs;
+
+  @override
+  State<_ScrollReveal> createState() => _ScrollRevealState();
+}
+
+class _ScrollRevealState extends State<_ScrollReveal> {
+  ScrollPosition? _position;
+  bool _revealed = false;
+  bool _revealScheduled = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkVisibility());
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final reduceMotion =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+    if (reduceMotion && !_revealed) {
+      _revealed = true;
+      return;
+    }
+
+    final nextPosition = Scrollable.maybeOf(context)?.position;
+    if (_position == nextPosition) {
+      return;
+    }
+
+    _position?.removeListener(_checkVisibility);
+    _position = nextPosition;
+    _position?.addListener(_checkVisibility);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkVisibility());
+  }
+
+  @override
+  void dispose() {
+    _position?.removeListener(_checkVisibility);
+    super.dispose();
+  }
+
+  void _checkVisibility() {
+    if (_revealed || _revealScheduled || !mounted) {
+      return;
+    }
+
+    final renderObject = context.findRenderObject();
+    if (renderObject is! RenderBox || !renderObject.attached) {
+      return;
+    }
+
+    final viewportHeight = MediaQuery.sizeOf(context).height;
+    final top = renderObject.localToGlobal(Offset.zero).dy;
+    final bottom = top + renderObject.size.height;
+
+    final visibleTop = top.clamp(0.0, viewportHeight).toDouble();
+    final visibleBottom = bottom.clamp(0.0, viewportHeight).toDouble();
+    final visibleHeight = visibleBottom - visibleTop;
+    final shouldReveal =
+      visibleHeight >= (renderObject.size.height * 0.18) ||
+        top <= viewportHeight * 0.84;
+
+    if (!shouldReveal) {
+      return;
+    }
+
+    if (widget.delayMs == 0) {
+      setState(() => _revealed = true);
+      return;
+    }
+
+    _revealScheduled = true;
+    Future<void>.delayed(Duration(milliseconds: widget.delayMs), () {
+      if (!mounted) {
+        return;
+      }
+      setState(() => _revealed = true);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final hiddenOffset = widget.from == _RevealFrom.left
+        ? const Offset(-0.12, 0)
+        : const Offset(0.12, 0);
+
+    return AnimatedOpacity(
+      opacity: _revealed ? 1 : 0,
+      duration: const Duration(milliseconds: 720),
+      curve: Curves.easeOutCubic,
+      child: AnimatedSlide(
+        offset: _revealed ? Offset.zero : hiddenOffset,
+        duration: const Duration(milliseconds: 720),
+        curve: Curves.easeOutCubic,
+        child: widget.child,
       ),
     );
   }
@@ -434,45 +584,71 @@ class _CountdownPillState extends State<_CountdownPill> {
     final minutes = (_remaining.inMinutes % 60).clamp(0, 59);
     final seconds = (_remaining.inSeconds % 60).clamp(0, 59);
     final isCompact = MediaQuery.sizeOf(context).width < 430;
+    final dividerColor = const Color(0xFF9DA6AE).withValues(alpha: 0.48);
 
     return Container(
       padding: EdgeInsets.symmetric(
-        horizontal: isCompact ? 12 : 24,
-        vertical: isCompact ? 10 : 14,
+        horizontal: isCompact ? 14 : 24,
+        vertical: isCompact ? 14 : 18,
       ),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.9),
-        borderRadius: BorderRadius.circular(99),
+        color: Colors.white.withValues(alpha: 0.87),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(
+          color: const Color(0xFFF5F8FA).withValues(alpha: 0.9),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.16),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: FittedBox(
         fit: BoxFit.scaleDown,
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _CountdownMetric(value: '$days', label: 'days', compact: isCompact),
-            SizedBox(width: isCompact ? 5 : 8),
+            _CountdownMetric(value: '$days', label: 'dias', compact: isCompact),
+            _MetricDivider(compact: isCompact, color: dividerColor),
             _CountdownMetric(
               value: hours.toString().padLeft(2, '0'),
-              label: 'hrs',
+              label: 'hora',
               compact: isCompact,
             ),
-            SizedBox(width: isCompact ? 5 : 8),
+            _MetricDivider(compact: isCompact, color: dividerColor),
             _CountdownMetric(
               value: minutes.toString().padLeft(2, '0'),
-              label: 'min',
+              label: 'minutos',
               compact: isCompact,
             ),
-            SizedBox(width: isCompact ? 5 : 8),
+            _MetricDivider(compact: isCompact, color: dividerColor),
             _CountdownMetric(
               value: seconds.toString().padLeft(2, '0'),
-              label: 'sec',
-              emphasize: true,
-              pulseTick: seconds,
+              label: 'segundos',
               compact: isCompact,
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _MetricDivider extends StatelessWidget {
+  const _MetricDivider({required this.compact, required this.color});
+
+  final bool compact;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 1,
+      height: compact ? 52 : 64,
+      margin: EdgeInsets.symmetric(horizontal: compact ? 10 : 14),
+      color: color,
     );
   }
 }
@@ -481,141 +657,51 @@ class _CountdownMetric extends StatelessWidget {
   const _CountdownMetric({
     required this.value,
     required this.label,
-    this.emphasize = false,
-    this.pulseTick = 0,
     this.compact = false,
   });
 
   final String value;
   final String label;
-  final bool emphasize;
-  final int pulseTick;
   final bool compact;
 
   @override
   Widget build(BuildContext context) {
-    final child = Row(
+    return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        _AnimatedCountdownValue(value: value, compact: compact),
-        SizedBox(width: compact ? 4 : 6),
+        _AnimatedCountdownNumber(value: value, compact: compact),
+        SizedBox(height: compact ? 4 : 6),
         Text(
           label,
           style: TextStyle(
-            fontSize: compact ? 11 : 13,
+            fontSize: compact ? 10 : 11,
             fontWeight: FontWeight.w600,
-            color: emphasize
-                ? const Color(0xFF6A4258)
-                : const Color(0xFF5D6973),
+            letterSpacing: 1.3,
+            color: const Color(0xFF4F5963),
           ),
         ),
       ],
     );
-
-    if (!emphasize) {
-      return Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: compact ? 8 : 10,
-          vertical: compact ? 7 : 8,
-        ),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF7FAFB),
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: child,
-      );
-    }
-
-    return TweenAnimationBuilder<double>(
-      key: ValueKey<int>(pulseTick),
-      tween: Tween(begin: 0, end: 1),
-      duration: const Duration(milliseconds: 620),
-      curve: Curves.easeOut,
-      builder: (context, animation, _) {
-        final glow = (1 - animation) * 0.26;
-        return Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: compact ? 8 : 10,
-            vertical: compact ? 7 : 8,
-          ),
-          decoration: BoxDecoration(
-            color: Color.lerp(
-              const Color(0xFFFBEFF4),
-              const Color(0xFFF7FAFB),
-              animation,
-            ),
-            borderRadius: BorderRadius.circular(14),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFFE19BB7).withValues(alpha: glow),
-                blurRadius: 12 + (8 * (1 - animation)),
-                spreadRadius: 1.5,
-              ),
-            ],
-          ),
-          child: child,
-        );
-      },
-    );
   }
 }
 
-class _AnimatedCountdownValue extends StatelessWidget {
-  const _AnimatedCountdownValue({required this.value, required this.compact});
+class _AnimatedCountdownNumber extends StatelessWidget {
+  const _AnimatedCountdownNumber({required this.value, required this.compact});
 
   final String value;
   final bool compact;
 
   @override
   Widget build(BuildContext context) {
-    return ClipRect(
-      child: SizedBox(
-        height: compact ? 22 : 26,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            for (var index = 0; index < value.length; index++)
-              _AnimatedCountdownDigit(
-                digit: value[index],
-                index: index,
-                totalLength: value.length,
-                compact: compact,
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _AnimatedCountdownDigit extends StatelessWidget {
-  const _AnimatedCountdownDigit({
-    required this.digit,
-    required this.index,
-    required this.totalLength,
-    required this.compact,
-  });
-
-  final String digit;
-  final int index;
-  final int totalLength;
-  final bool compact;
-
-  @override
-  Widget build(BuildContext context) {
-    final duration = Duration(milliseconds: 300 + (index * 90));
     return SizedBox(
-      width: compact
-          ? (totalLength >= 3 ? 11 : 10)
-          : (totalLength >= 3 ? 13 : 12),
-      height: compact ? 22 : 26,
+      height: compact ? 30 : 50,
       child: AnimatedSwitcher(
-        duration: duration,
-        switchInCurve: Curves.easeOutBack,
+        duration: const Duration(milliseconds: 360),
+        switchInCurve: Curves.easeOutCubic,
         switchOutCurve: Curves.easeInCubic,
         transitionBuilder: (child, animation) {
           final offsetAnimation = Tween<Offset>(
-            begin: Offset(0, 0.72 + (index * 0.08)),
+            begin: const Offset(0, 0.25),
             end: Offset.zero,
           ).animate(animation);
           return FadeTransition(
@@ -624,14 +710,15 @@ class _AnimatedCountdownDigit extends StatelessWidget {
           );
         },
         child: Text(
-          digit,
-          key: ValueKey<String>('$index-$digit'),
+          value,
+          key: ValueKey<String>(value),
           textAlign: TextAlign.center,
-          style: const TextStyle(
-            fontSize: 18,
+          style: TextStyle(
+            fontSize: compact ? 28 : 46,
             height: 1,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF35414A),
+            fontWeight: FontWeight.w600,
+            letterSpacing: 1,
+            color: const Color(0xFF36404A),
           ),
         ),
       ),
@@ -701,50 +788,54 @@ class _ScheduleSection extends StatelessWidget {
       children: [
         Text('Wedding Schedule', style: textTheme.headlineMedium),
         const SizedBox(height: 16),
-        ...schedule.map(
-          (item) => Card(
-            margin: const EdgeInsets.only(bottom: 14),
-            child: Padding(
-              padding: const EdgeInsets.all(18),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: 86,
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 10,
-                      horizontal: 8,
+        ...schedule.asMap().entries.map(
+          (entry) => _ScrollReveal(
+            from: entry.key.isEven ? _RevealFrom.left : _RevealFrom.right,
+            delayMs: 70 * entry.key,
+            child: Card(
+              margin: const EdgeInsets.only(bottom: 14),
+              child: Padding(
+                padding: const EdgeInsets.all(18),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 86,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 10,
+                        horizontal: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppTheme.lime,
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Text(
+                        entry.value.timeLabel,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
                     ),
-                    decoration: BoxDecoration(
-                      color: AppTheme.lime,
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Text(
-                      item.timeLabel,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(fontWeight: FontWeight.w700),
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          item.title,
-                          style: textTheme.titleLarge?.copyWith(fontSize: 22),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          item.description,
-                          style: textTheme.bodyLarge?.copyWith(
-                            color: const Color(0xFF5D6369),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            entry.value.title,
+                            style: textTheme.titleLarge?.copyWith(fontSize: 22),
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 6),
+                          Text(
+                            entry.value.description,
+                            style: textTheme.bodyLarge?.copyWith(
+                              color: const Color(0xFF5D6369),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -785,12 +876,16 @@ class _GallerySection extends StatelessWidget {
                 childAspectRatio: 1.18,
               ),
               itemBuilder: (context, index) {
-                return ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
-                  child: Image.network(
-                    images[index],
-                    fit: BoxFit.cover,
-                    filterQuality: FilterQuality.medium,
+                return _ScrollReveal(
+                  from: index.isEven ? _RevealFrom.left : _RevealFrom.right,
+                  delayMs: 50 * index,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: Image.network(
+                      images[index],
+                      fit: BoxFit.cover,
+                      filterQuality: FilterQuality.medium,
+                    ),
                   ),
                 );
               },
@@ -1286,15 +1381,23 @@ class _VenueAndFaqSection extends StatelessWidget {
           return Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(child: venueCard),
+              Expanded(
+                child: _ScrollReveal(from: _RevealFrom.left, child: venueCard),
+              ),
               const SizedBox(width: 16),
-              Expanded(child: faqCard),
+              Expanded(
+                child: _ScrollReveal(from: _RevealFrom.right, child: faqCard),
+              ),
             ],
           );
         }
 
         return Column(
-          children: [venueCard, const SizedBox(height: 14), faqCard],
+          children: [
+            _ScrollReveal(from: _RevealFrom.left, child: venueCard),
+            const SizedBox(height: 14),
+            _ScrollReveal(from: _RevealFrom.right, child: faqCard),
+          ],
         );
       },
     );
