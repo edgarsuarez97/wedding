@@ -9,7 +9,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:wedding_g_and_e/app.dart';
 
 void main() {
-  testWidgets('Invitation gate renders open button', (WidgetTester tester) async {
+  testWidgets('Invitation gate renders open button', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(const WeddingApp());
 
     expect(find.text('Open Invitation'), findsOneWidget);

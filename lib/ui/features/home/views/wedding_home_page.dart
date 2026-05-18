@@ -8,9 +8,11 @@ import 'package:video_player/video_player.dart';
 
 import '../../../../domain/models/rsvp_submission.dart';
 import '../../../../domain/models/schedule_item.dart';
+import '../../../../domain/models/wedding_content.dart';
 import '../../../core/theme/app_theme.dart';
 import '../cubit/invitation_cubit.dart';
 import '../cubit/rsvp_cubit.dart';
+import '../cubit/wedding_content_cubit.dart';
 
 class WeddingHomePage extends StatelessWidget {
   const WeddingHomePage({super.key});
@@ -22,7 +24,42 @@ class WeddingHomePage extends StatelessWidget {
         return AnimatedSwitcher(
           duration: const Duration(milliseconds: 700),
           child: isOpen
-              ? const _WeddingExperience()
+              ? BlocBuilder<WeddingContentCubit, WeddingContentState>(
+                  key: const ValueKey('wedding-experience-state'),
+                  builder: (context, state) {
+                    return switch (state.status) {
+                      WeddingContentStatus.success => _WeddingExperience(
+                        content: state.content!,
+                      ),
+                      WeddingContentStatus.failure => Scaffold(
+                        body: Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(24),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Text(
+                                  'Unable to load wedding details.',
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 12),
+                                FilledButton(
+                                  onPressed: () => context
+                                      .read<WeddingContentCubit>()
+                                      .load(),
+                                  child: const Text('Try again'),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      _ => const Scaffold(
+                        body: Center(child: CircularProgressIndicator()),
+                      ),
+                    };
+                  },
+                )
               : _InvitationGate(
                   key: const ValueKey('invitation-gate'),
                   onOpen: () =>
@@ -110,39 +147,33 @@ class _InvitationGate extends StatelessWidget {
   }
 }
 
-class _WeddingExperience extends StatelessWidget {
-  const _WeddingExperience();
+class _WeddingExperience extends StatefulWidget {
+  const _WeddingExperience({required this.content});
 
-  static final DateTime _weddingDate = DateTime(2027, 8, 28, 16);
+  final WeddingContent content;
 
-  static final List<ScheduleItem> _schedule = [
-    const ScheduleItem(
-      timeLabel: '3:30 PM',
-      title: 'Guest Arrival & Garden Welcome',
-      description: 'Signature lemonade, acoustic strings, and guest seating.',
-    ),
-    const ScheduleItem(
-      timeLabel: '4:00 PM',
-      title: 'Ceremony',
-      description: 'Vows and ring exchange at the Rose Terrace.',
-    ),
-    const ScheduleItem(
-      timeLabel: '5:00 PM',
-      title: 'Cocktail Hour',
-      description: 'Passed appetizers with live jazz under the lantern trees.',
-    ),
-    const ScheduleItem(
-      timeLabel: '6:30 PM',
-      title: 'Dinner Reception',
-      description:
-          'Three-course dinner and heartfelt toasts in the Grand Hall.',
-    ),
-    const ScheduleItem(
-      timeLabel: '8:15 PM',
-      title: 'First Dance & Celebration',
-      description: 'Dancing, dessert bar, and midnight espresso cart.',
-    ),
-  ];
+  @override
+  State<_WeddingExperience> createState() => _WeddingExperienceState();
+}
+
+class _WeddingExperienceState extends State<_WeddingExperience> {
+  bool _didPrecache = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_didPrecache) {
+      return;
+    }
+    _didPrecache = true;
+    final previewImages = [
+      widget.content.heroImageUrl,
+      ...widget.content.galleryImageUrls.take(2),
+    ];
+    for (final imageUrl in previewImages) {
+      unawaited(precacheImage(NetworkImage(imageUrl), context));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -154,44 +185,62 @@ class _WeddingExperience extends StatelessWidget {
           return SingleChildScrollView(
             child: Column(
               children: [
-                _HeroSection(weddingDate: _weddingDate),
+                _HeroSection(
+                  weddingDate: widget.content.weddingDate,
+                  heroImageUrl: widget.content.heroImageUrl,
+                  coupleNames: widget.content.coupleNames,
+                ),
                 _SectionContainer(
                   background: AppTheme.paper,
                   child: isDesktop
                       ? Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Expanded(child: _StorySection()),
+                            Expanded(
+                              child: _StorySection(story: widget.content.story),
+                            ),
                             SizedBox(width: 28),
                             Expanded(
-                              child: _ScheduleSection(schedule: _schedule),
+                              child: _ScheduleSection(
+                                schedule: widget.content.schedule,
+                              ),
                             ),
                           ],
                         )
                       : Column(
                           children: [
-                            _StorySection(),
+                            _StorySection(story: widget.content.story),
                             SizedBox(height: 28),
-                            _ScheduleSection(schedule: _schedule),
+                            _ScheduleSection(schedule: widget.content.schedule),
                           ],
                         ),
                 ),
                 _SectionContainer(
                   background: const Color(0xFFFFFCFD),
                   child: isDesktop
-                      ? const Row(
+                      ? Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Expanded(child: _GallerySection()),
+                            Expanded(
+                              child: _GallerySection(
+                                images: widget.content.galleryImageUrls,
+                              ),
+                            ),
                             SizedBox(width: 28),
-                            Expanded(child: _VideoSection()),
+                            Expanded(
+                              child: _VideoSection(
+                                videoUrl: widget.content.videoUrl,
+                              ),
+                            ),
                           ],
                         )
-                      : const Column(
+                      : Column(
                           children: [
-                            _GallerySection(),
+                            _GallerySection(
+                              images: widget.content.galleryImageUrls,
+                            ),
                             SizedBox(height: 28),
-                            _VideoSection(),
+                            _VideoSection(videoUrl: widget.content.videoUrl),
                           ],
                         ),
                 ),
@@ -235,9 +284,15 @@ class _SectionContainer extends StatelessWidget {
 }
 
 class _HeroSection extends StatelessWidget {
-  const _HeroSection({required this.weddingDate});
+  const _HeroSection({
+    required this.weddingDate,
+    required this.heroImageUrl,
+    required this.coupleNames,
+  });
 
   final DateTime weddingDate;
+  final String heroImageUrl;
+  final String coupleNames;
 
   @override
   Widget build(BuildContext context) {
@@ -248,8 +303,9 @@ class _HeroSection extends StatelessWidget {
           height: 680,
           width: double.infinity,
           child: Image.network(
-            'https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&w=1400&q=80',
+            heroImageUrl,
             fit: BoxFit.cover,
+            filterQuality: FilterQuality.medium,
           ),
         ),
         Container(
@@ -288,7 +344,7 @@ class _HeroSection extends StatelessWidget {
                     ),
                     const SizedBox(height: 20),
                     Text(
-                      'Edgar & Gabriela',
+                      coupleNames,
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.displayLarge?.copyWith(
                         color: Colors.white,
@@ -355,10 +411,23 @@ class _CountdownPillState extends State<_CountdownPill> {
   void initState() {
     super.initState();
     _remaining = widget.targetDate.difference(DateTime.now());
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      setState(() {
-        _remaining = widget.targetDate.difference(DateTime.now());
-      });
+    _scheduleTick();
+  }
+
+  void _scheduleTick() {
+    final now = DateTime.now();
+    final secondsUntilNextMinute = 60 - now.second;
+    _timer = Timer(Duration(seconds: secondsUntilNextMinute), () {
+      if (!mounted) {
+        return;
+      }
+      final nextRemaining = widget.targetDate.difference(DateTime.now());
+      if (nextRemaining.inMinutes != _remaining.inMinutes) {
+        setState(() => _remaining = nextRemaining);
+      } else {
+        _remaining = nextRemaining;
+      }
+      _scheduleTick();
     });
   }
 
@@ -392,7 +461,9 @@ class _CountdownPillState extends State<_CountdownPill> {
 }
 
 class _StorySection extends StatelessWidget {
-  const _StorySection();
+  const _StorySection({required this.story});
+
+  final String story;
 
   @override
   Widget build(BuildContext context) {
@@ -403,7 +474,7 @@ class _StorySection extends StatelessWidget {
         Text('Our Story', style: textTheme.headlineMedium),
         const SizedBox(height: 14),
         Text(
-          'From a coffee shop conversation to a lifetime promise, Edgar and Gabriela have built a love rooted in laughter, faith, and adventure. This celebration is our love letter to family and friends who have been part of the journey.',
+          story,
           style: textTheme.titleMedium?.copyWith(
             height: 1.5,
             color: const Color(0xFF5E646B),
@@ -505,14 +576,9 @@ class _ScheduleSection extends StatelessWidget {
 }
 
 class _GallerySection extends StatelessWidget {
-  const _GallerySection();
+  const _GallerySection({required this.images});
 
-  static const _images = [
-    'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=900&q=80',
-    'https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&w=900&q=80',
-    'https://images.unsplash.com/photo-1529636798458-92182e662485?auto=format&fit=crop&w=900&q=80',
-    'https://images.unsplash.com/photo-1473177104440-ffee2f376098?auto=format&fit=crop&w=900&q=80',
-  ];
+  final List<String> images;
 
   @override
   Widget build(BuildContext context) {
@@ -532,7 +598,7 @@ class _GallerySection extends StatelessWidget {
             GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: _images.length,
+              itemCount: images.length,
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: crossAxisCount,
                 crossAxisSpacing: 12,
@@ -542,7 +608,11 @@ class _GallerySection extends StatelessWidget {
               itemBuilder: (context, index) {
                 return ClipRRect(
                   borderRadius: BorderRadius.circular(20),
-                  child: Image.network(_images[index], fit: BoxFit.cover),
+                  child: Image.network(
+                    images[index],
+                    fit: BoxFit.cover,
+                    filterQuality: FilterQuality.medium,
+                  ),
                 );
               },
             ),
@@ -554,36 +624,66 @@ class _GallerySection extends StatelessWidget {
 }
 
 class _VideoSection extends StatefulWidget {
-  const _VideoSection();
+  const _VideoSection({required this.videoUrl});
+
+  final String videoUrl;
 
   @override
   State<_VideoSection> createState() => _VideoSectionState();
 }
 
 class _VideoSectionState extends State<_VideoSection> {
-  late final VideoPlayerController _controller;
+  VideoPlayerController? _controller;
   bool _ready = false;
+  bool _isInitializing = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _controller =
-        VideoPlayerController.networkUrl(
-            Uri.parse('https://samplelib.com/lib/preview/mp4/sample-10s.mp4'),
-          )
-          ..setLooping(true)
-          ..initialize().then((_) {
-            if (!mounted) {
-              return;
-            }
-            setState(() => _ready = true);
-          });
+  Future<void> _initializeIfNeeded() async {
+    if (_ready || _isInitializing) {
+      return;
+    }
+    setState(() => _isInitializing = true);
+    try {
+      final controller = VideoPlayerController.networkUrl(
+        Uri.parse(widget.videoUrl),
+      );
+      await controller.setLooping(true);
+      await controller.initialize();
+      if (!mounted) {
+        await controller.dispose();
+        return;
+      }
+      setState(() {
+        _controller = controller;
+        _ready = true;
+        _isInitializing = false;
+      });
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      setState(() => _isInitializing = false);
+    }
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _controller?.dispose();
     super.dispose();
+  }
+
+  Future<void> _onPlayPressed() async {
+    await _initializeIfNeeded();
+    if (!mounted || !_ready || _controller == null) {
+      return;
+    }
+    final controller = _controller!;
+    setState(() {
+      if (controller.value.isPlaying) {
+        controller.pause();
+      } else {
+        controller.play();
+      }
+    });
   }
 
   @override
@@ -605,16 +705,16 @@ class _VideoSectionState extends State<_VideoSection> {
             color: Colors.black,
             height: 320,
             width: double.infinity,
-            child: _ready
+            child: _ready && _controller != null
                 ? Stack(
                     fit: StackFit.expand,
                     children: [
                       FittedBox(
                         fit: BoxFit.cover,
                         child: SizedBox(
-                          width: _controller.value.size.width,
-                          height: _controller.value.size.height,
-                          child: VideoPlayer(_controller),
+                          width: _controller!.value.size.width,
+                          height: _controller!.value.size.height,
+                          child: VideoPlayer(_controller!),
                         ),
                       ),
                       Align(
@@ -622,17 +722,9 @@ class _VideoSectionState extends State<_VideoSection> {
                         child: Padding(
                           padding: const EdgeInsets.all(12),
                           child: IconButton.filledTonal(
-                            onPressed: () {
-                              setState(() {
-                                if (_controller.value.isPlaying) {
-                                  _controller.pause();
-                                } else {
-                                  _controller.play();
-                                }
-                              });
-                            },
+                            onPressed: _onPlayPressed,
                             icon: Icon(
-                              _controller.value.isPlaying
+                              _controller!.value.isPlaying
                                   ? Icons.pause_rounded
                                   : Icons.play_arrow_rounded,
                             ),
@@ -641,7 +733,15 @@ class _VideoSectionState extends State<_VideoSection> {
                       ),
                     ],
                   )
-                : const Center(child: CircularProgressIndicator()),
+                : Center(
+                    child: _isInitializing
+                        ? const CircularProgressIndicator()
+                        : FilledButton.icon(
+                            onPressed: _onPlayPressed,
+                            icon: const Icon(Icons.play_circle_outline),
+                            label: const Text('Play video'),
+                          ),
+                  ),
           ),
         ),
       ],
