@@ -411,23 +411,13 @@ class _CountdownPillState extends State<_CountdownPill> {
   void initState() {
     super.initState();
     _remaining = widget.targetDate.difference(DateTime.now());
-    _scheduleTick();
-  }
-
-  void _scheduleTick() {
-    final now = DateTime.now();
-    final secondsUntilNextMinute = 60 - now.second;
-    _timer = Timer(Duration(seconds: secondsUntilNextMinute), () {
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!mounted) {
         return;
       }
-      final nextRemaining = widget.targetDate.difference(DateTime.now());
-      if (nextRemaining.inMinutes != _remaining.inMinutes) {
-        setState(() => _remaining = nextRemaining);
-      } else {
-        _remaining = nextRemaining;
-      }
-      _scheduleTick();
+      setState(() {
+        _remaining = widget.targetDate.difference(DateTime.now());
+      });
     });
   }
 
@@ -442,18 +432,207 @@ class _CountdownPillState extends State<_CountdownPill> {
     final days = _remaining.inDays.clamp(0, 9999);
     final hours = (_remaining.inHours % 24).clamp(0, 23);
     final minutes = (_remaining.inMinutes % 60).clamp(0, 59);
+    final seconds = (_remaining.inSeconds % 60).clamp(0, 59);
+    final isCompact = MediaQuery.sizeOf(context).width < 430;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+      padding: EdgeInsets.symmetric(
+        horizontal: isCompact ? 12 : 24,
+        vertical: isCompact ? 10 : 14,
+      ),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(99),
       ),
-      child: Text(
-        '$days days • $hours hrs • $minutes min',
-        style: const TextStyle(
-          fontWeight: FontWeight.w600,
-          color: Color(0xFF35414A),
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _CountdownMetric(value: '$days', label: 'days', compact: isCompact),
+            SizedBox(width: isCompact ? 5 : 8),
+            _CountdownMetric(
+              value: hours.toString().padLeft(2, '0'),
+              label: 'hrs',
+              compact: isCompact,
+            ),
+            SizedBox(width: isCompact ? 5 : 8),
+            _CountdownMetric(
+              value: minutes.toString().padLeft(2, '0'),
+              label: 'min',
+              compact: isCompact,
+            ),
+            SizedBox(width: isCompact ? 5 : 8),
+            _CountdownMetric(
+              value: seconds.toString().padLeft(2, '0'),
+              label: 'sec',
+              emphasize: true,
+              pulseTick: seconds,
+              compact: isCompact,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CountdownMetric extends StatelessWidget {
+  const _CountdownMetric({
+    required this.value,
+    required this.label,
+    this.emphasize = false,
+    this.pulseTick = 0,
+    this.compact = false,
+  });
+
+  final String value;
+  final String label;
+  final bool emphasize;
+  final int pulseTick;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    final child = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _AnimatedCountdownValue(value: value, compact: compact),
+        SizedBox(width: compact ? 4 : 6),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: compact ? 11 : 13,
+            fontWeight: FontWeight.w600,
+            color: emphasize
+                ? const Color(0xFF6A4258)
+                : const Color(0xFF5D6973),
+          ),
+        ),
+      ],
+    );
+
+    if (!emphasize) {
+      return Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: compact ? 8 : 10,
+          vertical: compact ? 7 : 8,
+        ),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF7FAFB),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: child,
+      );
+    }
+
+    return TweenAnimationBuilder<double>(
+      key: ValueKey<int>(pulseTick),
+      tween: Tween(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 620),
+      curve: Curves.easeOut,
+      builder: (context, animation, _) {
+        final glow = (1 - animation) * 0.26;
+        return Container(
+          padding: EdgeInsets.symmetric(
+            horizontal: compact ? 8 : 10,
+            vertical: compact ? 7 : 8,
+          ),
+          decoration: BoxDecoration(
+            color: Color.lerp(
+              const Color(0xFFFBEFF4),
+              const Color(0xFFF7FAFB),
+              animation,
+            ),
+            borderRadius: BorderRadius.circular(14),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFFE19BB7).withValues(alpha: glow),
+                blurRadius: 12 + (8 * (1 - animation)),
+                spreadRadius: 1.5,
+              ),
+            ],
+          ),
+          child: child,
+        );
+      },
+    );
+  }
+}
+
+class _AnimatedCountdownValue extends StatelessWidget {
+  const _AnimatedCountdownValue({required this.value, required this.compact});
+
+  final String value;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRect(
+      child: SizedBox(
+        height: compact ? 22 : 26,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (var index = 0; index < value.length; index++)
+              _AnimatedCountdownDigit(
+                digit: value[index],
+                index: index,
+                totalLength: value.length,
+                compact: compact,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AnimatedCountdownDigit extends StatelessWidget {
+  const _AnimatedCountdownDigit({
+    required this.digit,
+    required this.index,
+    required this.totalLength,
+    required this.compact,
+  });
+
+  final String digit;
+  final int index;
+  final int totalLength;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    final duration = Duration(milliseconds: 300 + (index * 90));
+    return SizedBox(
+      width: compact
+          ? (totalLength >= 3 ? 11 : 10)
+          : (totalLength >= 3 ? 13 : 12),
+      height: compact ? 22 : 26,
+      child: AnimatedSwitcher(
+        duration: duration,
+        switchInCurve: Curves.easeOutBack,
+        switchOutCurve: Curves.easeInCubic,
+        transitionBuilder: (child, animation) {
+          final offsetAnimation = Tween<Offset>(
+            begin: Offset(0, 0.72 + (index * 0.08)),
+            end: Offset.zero,
+          ).animate(animation);
+          return FadeTransition(
+            opacity: animation,
+            child: SlideTransition(position: offsetAnimation, child: child),
+          );
+        },
+        child: Text(
+          digit,
+          key: ValueKey<String>('$index-$digit'),
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontSize: 18,
+            height: 1,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF35414A),
+          ),
         ),
       ),
     );
