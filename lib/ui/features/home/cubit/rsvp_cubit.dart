@@ -63,14 +63,15 @@ class RsvpCubit extends Cubit<RsvpState> {
       emit(
         state.copyWith(
           status: RsvpSubmissionStatus.success,
-          message: 'Thank you! Your RSVP was sent.',
+          message: 'Gracias. Tu confirmación fue enviada.',
         ),
       );
     } catch (_) {
       emit(
         state.copyWith(
           status: RsvpSubmissionStatus.failure,
-          message: 'Unable to send RSVP right now. Please try again.',
+          message:
+              'No fue posible enviar tu confirmación ahora. Inténtalo de nuevo.',
         ),
       );
     }

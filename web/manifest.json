@@ -1,11 +1,11 @@
 {
-    "name": "wedding_g_and_e",
-    "short_name": "wedding_g_and_e",
+    "name": "Boda de Edgar y Gabriela",
+    "short_name": "Boda E y G",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "Sitio web de boda de Edgar y Gabriela.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

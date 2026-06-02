@@ -10,35 +10,36 @@ class WeddingContentRepository {
         heroImageUrl:
             'https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&w=1400&q=80',
         story:
-            'From a coffee shop conversation to a lifetime promise, Edgar and Gabriela have built a love rooted in laughter, faith, and adventure. This celebration is our love letter to family and friends who have been part of the journey.',
+            'Desde una conversación en una cafetería hasta una promesa para toda la vida, Edgar y Gabriela han construido un amor lleno de risas, fe y aventura. Esta celebración es nuestra carta de amor para la familia y los amigos que han sido parte del camino.',
         schedule: [
           ScheduleItem(
             timeLabel: '3:30 PM',
-            title: 'Guest Arrival & Garden Welcome',
+            title: 'Llegada de invitados y bienvenida en el jardín',
             description:
-                'Signature lemonade, acoustic strings, and guest seating.',
+                'Limonada de la casa, cuerdas acústicas y acomodo de invitados.',
           ),
           ScheduleItem(
             timeLabel: '4:00 PM',
-            title: 'Ceremony',
-            description: 'Vows and ring exchange at the Rose Terrace.',
+            title: 'Ceremonia',
+            description: 'Votos e intercambio de anillos en la Terraza Rosa.',
           ),
           ScheduleItem(
             timeLabel: '5:00 PM',
-            title: 'Cocktail Hour',
+            title: 'Hora del cóctel',
             description:
-                'Passed appetizers with live jazz under the lantern trees.',
+                'Botanas al centro y jazz en vivo bajo los árboles iluminados.',
           ),
           ScheduleItem(
             timeLabel: '6:30 PM',
-            title: 'Dinner Reception',
+            title: 'Recepción y cena',
             description:
-                'Three-course dinner and heartfelt toasts in the Grand Hall.',
+                'Cena de tres tiempos y brindis emotivos en el Gran Salón.',
           ),
           ScheduleItem(
             timeLabel: '8:15 PM',
-            title: 'First Dance & Celebration',
-            description: 'Dancing, dessert bar, and midnight espresso cart.',
+            title: 'Primer baile y celebración',
+            description:
+                'Baile, mesa de postres y carrito de café de medianoche.',
           ),
         ],
         galleryImageUrls: [

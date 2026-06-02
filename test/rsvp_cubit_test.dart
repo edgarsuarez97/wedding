@@ -30,16 +30,16 @@ void main() {
         const RsvpSubmission(
           name: 'Edgar Suarez',
           email: 'edgar@example.com',
-          attendance: 'Joyfully attending',
+          attendance: 'Asistiré con gusto',
           guestCount: 2,
-          dietaryNotes: 'None',
+          dietaryNotes: 'Ninguna',
         ),
       ),
       expect: () => [
         const RsvpState(status: RsvpSubmissionStatus.submitting),
         const RsvpState(
           status: RsvpSubmissionStatus.success,
-          message: 'Thank you! Your RSVP was sent.',
+          message: 'Gracias. Tu confirmación fue enviada.',
         ),
       ],
     );

@@ -5,15 +5,17 @@
 // gestures. You can also use WidgetTester to find child widgets in the widget
 // tree, read text, and verify that the values of widget properties are correct.
 
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:wedding_g_and_e/app.dart';
 
 void main() {
-  testWidgets('Invitation gate renders open button', (
+  testWidgets('Carga directa del sitio sin pantalla de apertura', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(const WeddingApp());
 
-    expect(find.text('Open Invitation'), findsOneWidget);
+    expect(find.text('Abrir invitación'), findsNothing);
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
   });
 }

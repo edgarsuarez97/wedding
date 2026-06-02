@@ -62,7 +62,8 @@ class WeddingContentCubit extends Cubit<WeddingContentState> {
       emit(
         state.copyWith(
           status: WeddingContentStatus.failure,
-          message: 'Unable to load wedding details. Please refresh.',
+          message:
+              'No fue posible cargar los detalles de la boda. Actualiza la página.',
         ),
       );
     }

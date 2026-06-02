@@ -13,12 +13,16 @@ body {
 .loading-invitation {
   position: fixed;
   inset: 0;
+  width: 100vw;
+  min-height: 100vh;
+  min-height: 100svh;
   z-index: 9999;
   overflow: hidden;
   background: linear-gradient(145deg, #fff 10%, var(--rose) 45%, var(--mint) 100%);
   display: grid;
   place-items: center;
-  animation: fadeOut 0.8s ease 2.3s forwards;
+  isolation: isolate;
+  animation: fadeOut 1.05s ease 3.8s forwards;
 }
 
 .loading-invitation::before,
@@ -50,6 +54,7 @@ body {
   width: min(320px, 74vw);
   height: min(220px, 52vw);
   perspective: 900px;
+  transform: translateZ(0);
 }
 
 .envelope-body {
@@ -67,8 +72,11 @@ body {
   inset: 0;
   transform-origin: top;
   background: linear-gradient(120deg, var(--mint), var(--lavender));
+  -webkit-clip-path: polygon(0 0, 100% 0, 50% 52%);
   clip-path: polygon(0 0, 100% 0, 50% 52%);
-  animation: openFlap 1.2s cubic-bezier(0.18, 0.87, 0.31, 1.01) 0.4s forwards;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  animation: openFlap 1.9s cubic-bezier(0.18, 0.87, 0.31, 1.01) 0.5s forwards;
 }
 
 .invitation-note {
@@ -83,9 +91,9 @@ body {
   letter-spacing: 0.08em;
   color: #43535f;
   background: rgba(255, 255, 255, 0.92);
-  transform: translateY(46px);
+  transform: translateY(54px);
   opacity: 0;
-  animation: revealNote 1s ease 1.2s forwards;
+  animation: revealNote 1.35s ease 1.85s forwards;
 }
 
 @keyframes openFlap {
@@ -107,6 +115,22 @@ body {
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .loading-invitation {
+    animation-delay: 4.2s;
+  }
+
+  .envelope {
+    width: min(332px, 86vw);
+    height: min(236px, 62vw);
+  }
+
+  .invitation-note {
+    font-size: 0.94rem;
+    padding: 11px 12px;
   }
 }
 
