@@ -45,7 +45,6 @@ build/
 
 # Web-related
 **/web/stacktrace
-**/web/lib/generated_plugin_registrant.dart
 
 # Symbolication related
 app.*.symbols
@@ -57,3 +56,6 @@ app.*.symbols
 skills-lock.json
 .agents/
 .github/agents/
+
+# Local tooling
+.tools/

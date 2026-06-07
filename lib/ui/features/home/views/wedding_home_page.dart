@@ -60,8 +60,6 @@ class WeddingHomePage extends StatelessWidget {
   }
 }
 
-
-
 class WeddingExperience extends StatefulWidget {
   const WeddingExperience({super.key, required this.content});
 
@@ -190,135 +188,165 @@ class _WeddingExperienceState extends State<WeddingExperience> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppTheme.paper,
       body: LayoutBuilder(
         builder: (context, constraints) {
           final isDesktop = constraints.maxWidth >= 920;
 
           return SingleChildScrollView(
-            child: Column(
-              children: [
-                HeroSection(
-                  weddingDate: widget.content.weddingDate,
-                  heroImageUrl: widget.content.heroImageUrl,
-                  coupleNames: widget.content.coupleNames,
-                  isMusicPlaying: _isHeroMusicPlaying,
-                  isMusicBusy: _isPreparingAudio,
-                  onToggleMusic: _toggleHeroMusic,
+            child: DecoratedBox(
+              decoration: const BoxDecoration(
+                color: AppTheme.paper,
+                image: DecorationImage(
+                  image: AssetImage('assets/illustrations/paper_texture.jpg'),
+                  fit: BoxFit.none,
+                  repeat: ImageRepeat.repeat,
+                  opacity: 1,
                 ),
-                
-                //Story and Schedule
-                SectionContainer(
-
-
-                  background: AppTheme.paper,
-                  decorationMode: SectionDecorationMode.vineGarden,
-                  child: isDesktop
-                      ? Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: ScrollReveal(
-                                from: RevealFrom.left,
-                                child: StorySection(
-                                  story: widget.content.story,
-                                ),
-                              ),
-                            ),
-                            SizedBox(width: 28),
-                            Expanded(
-                              child: ScrollReveal(
-                                from: RevealFrom.right,
-                                child: ScheduleSection(
-                                  schedule: widget.content.schedule,
-                                ),
-                              ),
-                            ),
-                          ],
-                        )
-                      : Column(
-                          children: [
-                            ScrollReveal(
-                              from: RevealFrom.left,
-                              child: StorySection(story: widget.content.story),
-                            ),
-                            SizedBox(height: 28),
-                            ScrollReveal(
-                              from: RevealFrom.right,
-                              child: ScheduleSection(
-                                schedule: widget.content.schedule,
-                              ),
-                            ),
-                          ],
-                        ),
-                ),
-                
-                //Pictures and Video section
-                SectionContainer(
-                  background: const Color(0xFFFFFCFD),
-                  decorationMode: SectionDecorationMode.softFloralCorners,
-                  child: isDesktop
-                      ? Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: ScrollReveal(
-                                from: RevealFrom.left,
-                                child: GallerySection(
-                                  images: widget.content.galleryImageUrls,
-                                ),
-                              ),
-                            ),
-                            SizedBox(width: 28),
-                            Expanded(
-                              child: ScrollReveal(
-                                from: RevealFrom.right,
-                                child: VideoSection(
-                                  videoUrl: widget.content.videoUrl,
-                                ),
-                              ),
-                            ),
-                          ],
-                        )
-                      : Column(
-                          children: [
-                            ScrollReveal(
-                              from: RevealFrom.left,
-                              child: GallerySection(
-                                images: widget.content.galleryImageUrls,
-                              ),
-                            ),
-                            SizedBox(height: 28),
-                            ScrollReveal(
-                              from: RevealFrom.right,
-                              child: VideoSection(
-                                videoUrl: widget.content.videoUrl,
-                              ),
-                            ),
-                          ],
-                        ),
-                ),
-
-                //RSVP section
-                SectionContainer(
-                  background: Colors.white,
-                  decorationMode: SectionDecorationMode.roseFrame,
-                  child: ScrollReveal(
-                    from: RevealFrom.left,
-                    delayMs: 90,
-                    child: const RsvpSection(),
+              ),
+              child: Column(
+                children: [
+                  HeroSection(
+                    weddingDate: widget.content.weddingDate,
+                    heroImageUrl: widget.content.heroImageUrl,
+                    coupleNames: widget.content.coupleNames,
+                    isMusicPlaying: _isHeroMusicPlaying,
+                    isMusicBusy: _isPreparingAudio,
+                    onToggleMusic: _toggleHeroMusic,
                   ),
-                ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Transform.translate(
+                      offset: const Offset(0, -2),
+                      child: Column(
+                        children: [
+                          HeroEventDetailsSection(
+                            weddingDate: widget.content.weddingDate,
+                          ),
 
-                //Venue and FAQ section
-                SectionContainer(
-                  background: Color(0xFFFFFAFE),
-                  decorationMode: SectionDecorationMode.vineGarden,
-                  child: ScrollReveal(
-                    from: RevealFrom.right,
-                    child: const VenueAndFaqSection(),
+                          //Story and Schedule
+                          SectionContainer(
+                            background: Colors.transparent,
+                            decorationMode: SectionDecorationMode.vineGarden,
+                            child: isDesktop
+                                ? Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Expanded(
+                                        child: ScrollReveal(
+                                          from: RevealFrom.left,
+                                          child: StorySection(
+                                            story: widget.content.story,
+                                          ),
+                                        ),
+                                      ),
+                                      SizedBox(width: 28),
+                                      Expanded(
+                                        child: ScrollReveal(
+                                          from: RevealFrom.right,
+                                          child: ScheduleSection(
+                                            schedule: widget.content.schedule,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                : Column(
+                                    children: [
+                                      ScrollReveal(
+                                        from: RevealFrom.left,
+                                        child: StorySection(
+                                          story: widget.content.story,
+                                        ),
+                                      ),
+                                      SizedBox(height: 28),
+                                      ScrollReveal(
+                                        from: RevealFrom.right,
+                                        child: ScheduleSection(
+                                          schedule: widget.content.schedule,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                          ),
+
+                          //Pictures and Video section
+                          SectionContainer(
+                            background: Colors.transparent,
+                            decorationMode:
+                                SectionDecorationMode.softFloralCorners,
+                            child: isDesktop
+                                ? Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Expanded(
+                                        child: ScrollReveal(
+                                          from: RevealFrom.left,
+                                          child: GallerySection(
+                                            images:
+                                                widget.content.galleryImageUrls,
+                                          ),
+                                        ),
+                                      ),
+                                      SizedBox(width: 28),
+                                      Expanded(
+                                        child: ScrollReveal(
+                                          from: RevealFrom.right,
+                                          child: VideoSection(
+                                            videoUrl: widget.content.videoUrl,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                : Column(
+                                    children: [
+                                      ScrollReveal(
+                                        from: RevealFrom.left,
+                                        child: GallerySection(
+                                          images:
+                                              widget.content.galleryImageUrls,
+                                        ),
+                                      ),
+                                      SizedBox(height: 28),
+                                      ScrollReveal(
+                                        from: RevealFrom.right,
+                                        child: VideoSection(
+                                          videoUrl: widget.content.videoUrl,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                          ),
+
+                          //RSVP section
+                          SectionContainer(
+                            background: Colors.transparent,
+                            decorationMode: SectionDecorationMode.roseFrame,
+                            child: ScrollReveal(
+                              from: RevealFrom.left,
+                              delayMs: 90,
+                              child: const RsvpSection(),
+                            ),
+                          ),
+
+                          //Venue and FAQ section
+                          SectionContainer(
+                            background: Colors.transparent,
+                            decorationMode: SectionDecorationMode.vineGarden,
+                            child: ScrollReveal(
+                              from: RevealFrom.right,
+                              child: const VenueAndFaqSection(),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           );
         },
@@ -327,8 +355,6 @@ class _WeddingExperienceState extends State<WeddingExperience> {
   }
 }
 
-
-
 Future<void> launchGoogleCalendar(DateTime weddingDate) async {
   final start = DateFormat("yyyyMMdd'T'HHmmss").format(weddingDate.toUtc());
   final end = DateFormat(
@@ -336,12 +362,10 @@ Future<void> launchGoogleCalendar(DateTime weddingDate) async {
   ).format(weddingDate.add(const Duration(hours: 6)).toUtc());
 
   final url =
-      'https://calendar.google.com/calendar/render?action=TEMPLATE&text=${Uri.encodeComponent('Boda de Edgar y Gabriela')}&dates=$start/$end&details=${Uri.encodeComponent('Acompañanos en nuestra celebración de boda')}&location=${Uri.encodeComponent('Rosewood Garden Estate')}';
+      'https://calendar.google.com/calendar/render?action=TEMPLATE&text=${Uri.encodeComponent('Boda de Edgar y Gabriela')}&dates=$start/$end&details=${Uri.encodeComponent('Acompañanos en nuestra celebración de boda')}&location=${Uri.encodeComponent('Tribus Privé Urbanización Mañongo Valencia, frente al Conjunto Residencial Titanium Suites')}';
 
   await openExternal(url);
 }
-
-
 
 Future<void> openExternal(String url) async {
   final uri = Uri.parse(url);

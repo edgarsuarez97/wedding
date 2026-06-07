@@ -8,6 +8,8 @@ enum RsvpMode { native, google }
 
 enum RsvpSubmissionStatus { idle, submitting, success, failure }
 
+const maxGuestsPerInvitation = 2;
+
 class RsvpState extends Equatable {
   const RsvpState({
     this.mode = RsvpMode.native,
@@ -52,6 +54,17 @@ class RsvpCubit extends Cubit<RsvpState> {
   }
 
   Future<void> submit(RsvpSubmission submission) async {
+    if (submission.guestCount > maxGuestsPerInvitation) {
+      emit(
+        state.copyWith(
+          status: RsvpSubmissionStatus.failure,
+          message:
+              'El máximo permitido por invitación es de $maxGuestsPerInvitation asistentes.',
+        ),
+      );
+      return;
+    }
+
     emit(
       state.copyWith(
         status: RsvpSubmissionStatus.submitting,

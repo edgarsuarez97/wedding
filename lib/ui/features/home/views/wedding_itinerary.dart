@@ -1,5 +1,6 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:wedding_g_and_e/domain/models/schedule_item.dart';
 import 'package:wedding_g_and_e/ui/core/theme/app_theme.dart';
 
@@ -74,91 +75,59 @@ class ScheduleSection extends StatelessWidget {
               width: double.infinity,
               padding: EdgeInsets.fromLTRB(
                 isCompact ? 8 : 18,
-                24,
+                isCompact ? 28 : 34,
                 isCompact ? 8 : 18,
-                24,
+                isCompact ? 28 : 34,
               ),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFFEFC),
-                borderRadius: BorderRadius.circular(26),
-                border: Border.all(color: const Color(0xFFF0E5D6)),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFFB79872).withValues(alpha: 0.16),
-                    blurRadius: 24,
-                    offset: const Offset(0, 12),
-                  ),
-                ],
-              ),
-              child: Stack(
-                children: [
-                  Positioned(
-                    top: -10,
-                    left: -10,
-                    child: _FloralCorner(size: isCompact ? 84 : 110),
-                  ),
-                  Positioned(
-                    top: -10,
-                    right: -10,
-                    child: _FloralCorner(
-                      size: isCompact ? 84 : 110,
-                      quarterTurns: 1,
-                    ),
-                  ),
-                  Positioned(
-                    bottom: -10,
-                    left: -10,
-                    child: _FloralCorner(
-                      size: isCompact ? 84 : 110,
-                      quarterTurns: 3,
-                    ),
-                  ),
-                  Positioned(
-                    bottom: -10,
-                    right: -10,
-                    child: _FloralCorner(
-                      size: isCompact ? 84 : 110,
-                      quarterTurns: 2,
-                    ),
-                  ),
-                  Positioned(
-                    top: 6,
-                    bottom: 6,
-                    left: lineLeft,
-                    child: Container(
-                      width: 2,
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Color(0xFF3F3A35),
-                            Color(0xFF6F665C),
-                            Color(0xFF3F3A35),
-                          ],
+              child: _GlassPanel(
+                borderRadius: 26,
+                padding: EdgeInsets.fromLTRB(
+                  isCompact ? 8 : 18,
+                  isCompact ? 28 : 34,
+                  isCompact ? 8 : 18,
+                  isCompact ? 28 : 34,
+                ),
+                child: Stack(
+                  children: [
+                    Positioned(
+                      top: 6,
+                      bottom: 6,
+                      left: lineLeft,
+                      child: Container(
+                        width: 2,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Color(0xFF3F3A35),
+                              Color(0xFF6F665C),
+                              Color(0xFF3F3A35),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(20),
                         ),
-                        borderRadius: BorderRadius.circular(20),
                       ),
                     ),
-                  ),
-                  Column(
-                    children: [
-                      ...schedule.asMap().entries.map((entry) {
-                        return Padding(
-                          padding: EdgeInsets.only(
-                            bottom: entry.key == schedule.length - 1 ? 0 : 14,
-                          ),
-                          child: _TimelineEventRow(
-                            item: entry.value,
-                            icon: _scheduleIcon(entry.value.title, entry.key),
-                            isLeft: entry.key.isEven,
-                            isCompact: isCompact,
-                          ),
-                        );
-                      }),
-                    ],
-                  ),
-                ],
+                    Column(
+                      children: [
+                        ...schedule.asMap().entries.map((entry) {
+                          return Padding(
+                            padding: EdgeInsets.only(
+                              bottom: entry.key == schedule.length - 1 ? 0 : 14,
+                            ),
+                            child: _TimelineEventRow(
+                              item: entry.value,
+                              icon: _scheduleIcon(entry.value.title, entry.key),
+                              isLeft: entry.key.isEven,
+                              isCompact: isCompact,
+                            ),
+                          );
+                        }),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -243,8 +212,6 @@ class _TimelineMarker extends StatelessWidget {
   }
 }
 
-
-
 class _TimelineEventCard extends StatelessWidget {
   const _TimelineEventCard({required this.item, required this.alignRight});
 
@@ -256,14 +223,10 @@ class _TimelineEventCard extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     return Align(
       alignment: alignRight ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
+      child: _GlassPanel(
+        borderRadius: 16,
         constraints: const BoxConstraints(maxWidth: 360),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFEADBC9)),
-        ),
         child: Column(
           crossAxisAlignment: alignRight
               ? CrossAxisAlignment.end
@@ -302,32 +265,46 @@ class _TimelineEventCard extends StatelessWidget {
   }
 }
 
+class _GlassPanel extends StatelessWidget {
+  const _GlassPanel({
+    required this.child,
+    required this.borderRadius,
+    this.padding,
+    this.constraints,
+  });
 
-class _FloralCorner extends StatelessWidget {
-  const _FloralCorner({required this.size, this.quarterTurns = 0});
-
-  final double size;
-  final int quarterTurns;
+  final Widget child;
+  final double borderRadius;
+  final EdgeInsetsGeometry? padding;
+  final BoxConstraints? constraints;
 
   @override
   Widget build(BuildContext context) {
-    return Opacity(
-      opacity: 0.82,
-      child: RotatedBox(
-        quarterTurns: quarterTurns,
-        child: SizedBox(
-          width: size,
-          height: size,
-          child: SvgPicture.asset(
-            'assets/illustrations/floral_corner.svg',
-            fit: BoxFit.contain,
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(borderRadius),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+        child: Container(
+          constraints: constraints,
+          padding: padding,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(borderRadius),
+            color: Colors.white.withValues(alpha: 0.30),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.55)),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF6A5943).withValues(alpha: 0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
+              ),
+            ],
           ),
+          child: child,
         ),
       ),
     );
   }
 }
-
 
 IconData _scheduleIcon(String title, int index) {
   final normalized = title.toLowerCase();

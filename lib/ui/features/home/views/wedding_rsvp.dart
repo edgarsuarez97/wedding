@@ -173,7 +173,7 @@ class _RsvpSectionState extends State<RsvpSection> {
                           DropdownButtonFormField<int>(
                             initialValue: _guestCount,
                             items: List.generate(
-                              4,
+                              maxGuestsPerInvitation,
                               (index) => DropdownMenuItem(
                                 value: index + 1,
                                 child: Text(
@@ -188,6 +188,7 @@ class _RsvpSectionState extends State<RsvpSection> {
                             },
                             decoration: const InputDecoration(
                               labelText: 'Número de asistentes',
+                              helperText: 'Máximo 2 asistentes por invitación',
                             ),
                           ),
                           const SizedBox(height: 12),
@@ -246,7 +247,6 @@ class _RsvpSectionState extends State<RsvpSection> {
   }
 }
 
-
 class _GoogleFormsCard extends StatelessWidget {
   const _GoogleFormsCard({
     required super.key,
@@ -289,7 +289,8 @@ class _GoogleFormsCard extends StatelessWidget {
                   label: const Text('Abrir Google Form'),
                 ),
                 OutlinedButton.icon(
-                  onPressed: () => openExternal('https://docs.google.com/forms/u/0/'),
+                  onPressed: () =>
+                      openExternal('https://docs.google.com/forms/u/0/'),
                   icon: const Icon(Icons.settings),
                   label: const Text('Administrar formulario'),
                 ),
@@ -301,7 +302,6 @@ class _GoogleFormsCard extends StatelessWidget {
     );
   }
 }
-
 
 String _googleFormLink({required String name, required String email}) {
   final base = 'https://docs.google.com/forms/d/e/your-form-id/viewform';

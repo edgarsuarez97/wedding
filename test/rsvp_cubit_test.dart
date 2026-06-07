@@ -43,5 +43,25 @@ void main() {
         ),
       ],
     );
+
+    blocTest<RsvpCubit, RsvpState>(
+      'fails when guest count exceeds max per invitation',
+      build: () => cubit,
+      act: (cubit) => cubit.submit(
+        const RsvpSubmission(
+          name: 'Edgar Suarez',
+          email: 'edgar@example.com',
+          attendance: 'Asistiré con gusto',
+          guestCount: 3,
+          dietaryNotes: 'Ninguna',
+        ),
+      ),
+      expect: () => [
+        const RsvpState(
+          status: RsvpSubmissionStatus.failure,
+          message: 'El máximo permitido por invitación es de 2 asistentes.',
+        ),
+      ],
+    );
   });
 }

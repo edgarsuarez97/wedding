@@ -3,6 +3,8 @@
   --mint: #bed7d1;
   --lavender: #f7c4f7;
   --blush: #f8d1e0;
+  --invite-exit-duration: 0.55s;
+  --invite-exit-delay: 1.2s;
 }
 
 body {
@@ -22,7 +24,11 @@ body {
   display: grid;
   place-items: center;
   isolation: isolate;
-  animation: fadeOut 1.05s ease 3.8s forwards;
+  animation: fadeOut var(--invite-exit-duration) cubic-bezier(0.32, 0.02, 0.18, 1) var(--invite-exit-delay) forwards;
+}
+
+.loading-invitation.is-complete {
+  animation: fadeOut 0.55s cubic-bezier(0.32, 0.02, 0.18, 1) 0s forwards;
 }
 
 .loading-invitation::before,
@@ -120,7 +126,7 @@ body {
 
 @media (max-width: 600px) {
   .loading-invitation {
-    animation-delay: 4.2s;
+    animation-delay: 1.35s;
   }
 
   .envelope {
