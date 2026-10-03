@@ -13,6 +13,8 @@ class AppMotion {
   static const Duration butterflyEvery = Duration(seconds: 26);
   static const Duration cornerSway = Duration(seconds: 6);
   static const Duration wheelScroll = Duration(milliseconds: 520);
+  static const Duration galleryHold = Duration(seconds: 5);
+  static const Duration galleryFade = Duration(milliseconds: 700);
 
   static const Curve organic = Curves.easeOutCubic;
   static const Curve sproutCurve = Curves.easeOutBack;
