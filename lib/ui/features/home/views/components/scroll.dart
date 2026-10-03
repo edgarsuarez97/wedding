@@ -104,7 +104,8 @@ class _ScrollRevealState extends State<ScrollReveal> {
       tween: Tween(end: _revealed ? 1 : 0),
       duration: AppMotion.reveal,
       curve: AppMotion.organic,
-      child: widget.child,
+      // La tarjeta se graba una vez; la animación solo la mueve y la funde.
+      child: RepaintBoundary(child: widget.child),
       builder: (context, t, child) {
         return Opacity(
           opacity: t,

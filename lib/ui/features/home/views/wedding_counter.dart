@@ -93,53 +93,63 @@ class _HeroSectionState extends State<HeroSection>
     return SizedBox(
       height: 680,
       width: double.infinity,
-      child: ShaderMask(
-        blendMode: BlendMode.dstIn,
-        shaderCallback: (bounds) {
-          return const LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Colors.white,
-              Colors.white,
-              Colors.white,
-              Colors.transparent,
-            ],
-            stops: [0, 0.62, 0.84, 1],
-          ).createShader(bounds);
-        },
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: Image.network(
-                widget.heroImageUrl,
-                fit: BoxFit.cover,
-                filterQuality: FilterQuality.medium,
-              ),
-            ),
-            Positioned.fill(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.bottomCenter,
-                    end: Alignment.topCenter,
+      child: Stack(
+        children: [
+          // La foto y su velo son estáticos: se graban una vez con su fundido
+          // hacia el papel, y las hojas se animan en una capa aparte.
+          Positioned.fill(
+            child: RepaintBoundary(
+              child: ShaderMask(
+                blendMode: BlendMode.dstIn,
+                shaderCallback: (bounds) {
+                  return const LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
                     colors: [
-                      const Color(0xFF1E2028).withValues(alpha: 0.55),
-                      const Color(0xFF1E2028).withValues(alpha: 0.14),
+                      Colors.white,
+                      Colors.white,
+                      Colors.white,
+                      Colors.transparent,
                     ],
-                  ),
+                    stops: [0, 0.62, 0.84, 1],
+                  ).createShader(bounds);
+                },
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Image.network(
+                      widget.heroImageUrl,
+                      fit: BoxFit.cover,
+                      filterQuality: FilterQuality.medium,
+                    ),
+                    DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.bottomCenter,
+                          end: Alignment.topCenter,
+                          colors: [
+                            const Color(0xFF1E2028).withValues(alpha: 0.55),
+                            const Color(0xFF1E2028).withValues(alpha: 0.14),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-            const Positioned.fill(child: FallingLeaves()),
-            Positioned(
-              top: 0,
-              right: 0,
-              child: _FadeSlideIn(
-                animation: _buttonAnimation,
-                beginOffsetY: 16,
-                child: SafeArea(
-                  minimum: const EdgeInsets.only(top: 18, right: 18),
+          ),
+          // Las hojas se desvanecen solas al llegar al borde inferior.
+          const Positioned.fill(child: FallingLeaves(fadeFrom: 0.84)),
+          Positioned(
+            top: 0,
+            right: 0,
+            child: _FadeSlideIn(
+              animation: _buttonAnimation,
+              beginOffsetY: 16,
+              child: SafeArea(
+                minimum: const EdgeInsets.only(top: 18, right: 18),
+                child: RepaintBoundary(
                   child: _BouncingMusicButton(
                     isPlaying: widget.isMusicPlaying,
                     isBusy: widget.isMusicBusy,
@@ -149,96 +159,93 @@ class _HeroSectionState extends State<HeroSection>
                 ),
               ),
             ),
-            Positioned.fill(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(24, 40, 24, 90),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _FadeSlideIn(
-                      animation: _namesAnimation,
-                      beginOffsetY: 22,
-                      child: Text.rich(
-                        TextSpan(
-                          children: [
-                            TextSpan(text: names.first),
-                            if (names.length > 1) ...[
-                              TextSpan(
-                                text: ' & ',
-                                style: TextStyle(
-                                  color: const Color(0xFFFFC3D3),
-                                  fontSize: namesSize * 0.66,
-                                ),
-                              ),
-                              TextSpan(text: names.last),
-                            ],
-                          ],
-                        ),
-                        textAlign: TextAlign.center,
-                        style:
-                            AppTheme.script(
-                              fontSize: namesSize,
-                              color: Colors.white,
-                            ).copyWith(
-                              shadows: const [
-                                Shadow(
-                                  color: Color(0x40000000),
-                                  blurRadius: 18,
-                                ),
-                              ],
-                            ),
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    _FadeSlideIn(
-                      animation: _dateAnimation,
-                      beginOffsetY: 18,
-                      child: Column(
+          ),
+          Positioned.fill(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 40, 24, 90),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _FadeSlideIn(
+                    animation: _namesAnimation,
+                    beginOffsetY: 22,
+                    child: Text.rich(
+                      TextSpan(
                         children: [
-                          Container(
-                            width: 140,
-                            height: 1,
-                            decoration: const BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  Color(0x00FFEB9F),
-                                  AppTheme.butter,
-                                  Color(0x00FFEB9F),
-                                ],
+                          TextSpan(text: names.first),
+                          if (names.length > 1) ...[
+                            TextSpan(
+                              text: ' & ',
+                              style: TextStyle(
+                                color: const Color(0xFFFFC3D3),
+                                fontSize: namesSize * 0.66,
                               ),
                             ),
-                          ),
-                          const SizedBox(height: 14),
-                          Text(
-                            dateText,
-                            style: AppTheme.display(
-                              fontSize: width < 500 ? 18 : 22,
-                              color: Colors.white,
-                            ).copyWith(letterSpacing: 7),
-                          ),
+                            TextSpan(text: names.last),
+                          ],
                         ],
                       ),
+                      textAlign: TextAlign.center,
+                      style:
+                          AppTheme.script(
+                            fontSize: namesSize,
+                            color: Colors.white,
+                          ).copyWith(
+                            shadows: const [
+                              Shadow(color: Color(0x40000000), blurRadius: 18),
+                            ],
+                          ),
                     ),
-                    const SizedBox(height: 12),
-                    _FadeSlideIn(
-                      animation: _placeAnimation,
-                      beginOffsetY: 16,
-                      child: Text(
-                        _venueLine.toUpperCase(),
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.jost(
-                          fontSize: 12.5,
-                          letterSpacing: 2.5,
-                          color: Colors.white.withValues(alpha: 0.88),
+                  ),
+                  const SizedBox(height: 14),
+                  _FadeSlideIn(
+                    animation: _dateAnimation,
+                    beginOffsetY: 18,
+                    child: Column(
+                      children: [
+                        Container(
+                          width: 140,
+                          height: 1,
+                          decoration: const BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Color(0x00FFEB9F),
+                                AppTheme.butter,
+                                Color(0x00FFEB9F),
+                              ],
+                            ),
+                          ),
                         ),
+                        const SizedBox(height: 14),
+                        Text(
+                          dateText,
+                          style: AppTheme.display(
+                            fontSize: width < 500 ? 18 : 22,
+                            color: Colors.white,
+                          ).copyWith(letterSpacing: 7),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  _FadeSlideIn(
+                    animation: _placeAnimation,
+                    beginOffsetY: 16,
+                    child: Text(
+                      _venueLine.toUpperCase(),
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.jost(
+                        fontSize: 12.5,
+                        letterSpacing: 2.5,
+                        color: Colors.white.withValues(alpha: 0.88),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
