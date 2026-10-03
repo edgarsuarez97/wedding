@@ -5,7 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'monogram.dart';
-import 'wildflowers.dart';
+import 'printed_bouquet.dart';
+import 'garden_colors.dart';
 
 /// Portada de la invitación: dos puertas con estampado de flores silvestres
 /// unidas al centro por un sello de cera verde oliva con el monograma.
@@ -298,6 +299,26 @@ class _Door extends StatelessWidget {
                   child: CustomPaint(painter: _PrintPainter()),
                 ),
               ),
+              // Grano de papel encima de la tinta para que se sienta impreso.
+              Positioned(
+                left: -originX,
+                top: 0,
+                width: fullSize.width,
+                height: fullSize.height,
+                child: const IgnorePointer(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: AssetImage(
+                          'assets/illustrations/paper_texture.jpg',
+                        ),
+                        repeat: ImageRepeat.repeat,
+                        opacity: 0.22,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
               // Borde interior de papel: un brillo y una sombra suaves.
               Positioned.fill(
                 child: DecoratedBox(
@@ -327,7 +348,7 @@ class _PrintPainter extends CustomPainter {
   const _PrintPainter();
 
   @override
-  void paint(Canvas canvas, Size size) => paintWildflowerPrint(canvas, size);
+  void paint(Canvas canvas, Size size) => paintPrintedBouquet(canvas, size);
 
   @override
   bool shouldRepaint(_PrintPainter oldDelegate) => false;
