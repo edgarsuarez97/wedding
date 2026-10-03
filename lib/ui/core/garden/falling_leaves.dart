@@ -10,9 +10,13 @@ import '../theme/app_theme.dart';
 /// Un solo [CustomPainter] con un [Ticker]; con movimiento reducido quedan
 /// quietas.
 class FallingLeaves extends StatefulWidget {
-  const FallingLeaves({super.key, this.count = 26});
+  const FallingLeaves({super.key, this.count = 26, this.fadeFrom});
 
   final int count;
+
+  /// Si se indica, las hojas se desvanecen desde esta fracción del alto
+  /// (0..1) hasta el borde inferior.
+  final double? fadeFrom;
 
   @override
   State<FallingLeaves> createState() => _FallingLeavesState();
@@ -115,7 +119,7 @@ class _FallingLeavesState extends State<FallingLeaves>
             _ensureLeaves(constraints.biggest);
             return CustomPaint(
               size: constraints.biggest,
-              painter: _LeavesPainter(_leaves, _time),
+              painter: _LeavesPainter(_leaves, _time, widget.fadeFrom),
             );
           },
         ),
@@ -151,21 +155,30 @@ class _Leaf {
 }
 
 class _LeavesPainter extends CustomPainter {
-  _LeavesPainter(this.leaves, this.time) : super(repaint: time);
+  _LeavesPainter(this.leaves, this.time, this.fadeFrom) : super(repaint: time);
 
   final List<_Leaf> leaves;
   final ValueNotifier<double> time;
+  final double? fadeFrom;
 
   final _fill = Paint()..style = PaintingStyle.fill;
   final _vein = Paint()
     ..style = PaintingStyle.stroke
-    ..strokeWidth = 0.8
-    ..color = const Color(0x5934392F);
+    ..strokeWidth = 0.8;
 
   @override
   void paint(Canvas canvas, Size size) {
     final t = time.value;
+    final fadeStart = fadeFrom == null ? null : size.height * fadeFrom!;
     for (final leaf in leaves) {
+      var alpha = 0.9;
+      if (fadeStart != null && leaf.y > fadeStart) {
+        final fade = 1 - (leaf.y - fadeStart) / (size.height - fadeStart);
+        if (fade <= 0) {
+          continue;
+        }
+        alpha *= fade;
+      }
       final s = leaf.size;
       canvas
         ..save()
@@ -177,7 +190,8 @@ class _LeavesPainter extends CustomPainter {
         ..moveTo(-s, 0)
         ..cubicTo(-s * 0.5, -s * 0.62, s * 0.5, -s * 0.62, s, 0)
         ..cubicTo(s * 0.5, s * 0.62, -s * 0.5, s * 0.62, -s, 0);
-      _fill.color = leaf.color.withValues(alpha: 0.9);
+      _fill.color = leaf.color.withValues(alpha: alpha);
+      _vein.color = AppTheme.ink.withValues(alpha: alpha * 0.39);
       canvas
         ..drawPath(path, _fill)
         ..drawLine(Offset(-s * 0.9, 0), Offset(s * 0.9, 0), _vein)

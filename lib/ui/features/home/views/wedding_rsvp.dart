@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:wedding_g_and_e/domain/models/rsvp_submission.dart';
 import 'package:wedding_g_and_e/ui/core/garden/garden_card.dart';
@@ -286,14 +287,71 @@ class _ChoiceGroup<T> extends StatelessWidget {
           runSpacing: 10,
           children: [
             for (final entry in options.entries)
-              ChoiceChip(
-                label: Text(entry.value),
+              _ChoicePill(
+                label: entry.value,
                 selected: entry.key == value,
-                onSelected: (_) => onChanged(entry.key),
+                onTap: () => onChanged(entry.key),
               ),
           ],
         ),
       ],
+    );
+  }
+}
+
+/// Opción en forma de píldora. Reemplaza a ChoiceChip, que con la altura de
+/// línea de Jost recortaba y desvanecía la parte de abajo del texto.
+class _ChoicePill extends StatelessWidget {
+  const _ChoicePill({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final duration = AppMotion.reduced(context)
+        ? Duration.zero
+        : const Duration(milliseconds: 260);
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: Material(
+        color: Colors.transparent,
+        shape: const StadiumBorder(),
+        child: InkWell(
+          onTap: onTap,
+          customBorder: const StadiumBorder(),
+          child: AnimatedContainer(
+            duration: duration,
+            curve: AppMotion.organic,
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+            decoration: ShapeDecoration(
+              color: selected
+                  ? AppTheme.lavender
+                  : Colors.white.withValues(alpha: 0.6),
+              shape: StadiumBorder(
+                side: BorderSide(
+                  color: selected ? AppTheme.lavenderInk : AppTheme.stem,
+                ),
+              ),
+            ),
+            child: Text(
+              label,
+              style: GoogleFonts.jost(
+                color: AppTheme.ink,
+                fontSize: 15,
+                height: 1.25,
+                fontWeight: selected ? FontWeight.w500 : FontWeight.w400,
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:wedding_g_and_e/domain/models/schedule_item.dart';
 import 'package:wedding_g_and_e/ui/core/garden/garden_card.dart';
@@ -71,7 +72,10 @@ class ScheduleSection extends StatelessWidget {
           // El tallo crece con el scroll y se recoge al volver a subir.
           ViewportProgressBuilder(
             builder: (context, rawProgress, _) {
-              final progress = AppMotion.reduced(context) ? 1.0 : rawProgress;
+              final reduced = AppMotion.reduced(context);
+              final ValueListenable<double> progress = reduced
+                  ? const _Full()
+                  : rawProgress;
               return Stack(
                 children: [
                   Positioned(
@@ -79,7 +83,9 @@ class ScheduleSection extends StatelessWidget {
                     top: 0,
                     bottom: 0,
                     width: 56,
-                    child: CustomPaint(painter: _StemPainter(progress)),
+                    child: RepaintBoundary(
+                      child: CustomPaint(painter: _StemPainter(progress)),
+                    ),
                   ),
                   Padding(
                     padding: const EdgeInsets.only(left: 64),
@@ -94,7 +100,8 @@ class ScheduleSection extends StatelessWidget {
                               item: item,
                               icon: _scheduleIcon(item.title, i),
                               flower: _flowers[i % _flowers.length],
-                              open: progress >= (i + 0.15) / schedule.length,
+                              progress: progress,
+                              threshold: (i + 0.15) / schedule.length,
                             ),
                           ),
                       ],
@@ -115,13 +122,15 @@ class _TimelineItem extends StatelessWidget {
     required this.item,
     required this.icon,
     required this.flower,
-    required this.open,
+    required this.progress,
+    required this.threshold,
   });
 
   final ScheduleItem item;
   final IconData icon;
   final Wildflower flower;
-  final bool open;
+  final ValueListenable<double> progress;
+  final double threshold;
 
   @override
   Widget build(BuildContext context) {
@@ -132,16 +141,10 @@ class _TimelineItem extends StatelessWidget {
         Positioned(
           left: -58,
           top: 8,
-          child: AnimatedScale(
-            scale: open ? 1 : 0.25,
-            duration: AppMotion.bloom,
-            curve: AppMotion.sproutCurve,
-            child: AnimatedRotation(
-              turns: open ? 0 : -0.15,
-              duration: AppMotion.bloom,
-              curve: AppMotion.organic,
-              child: WildflowerIcon(flower, size: 44),
-            ),
+          child: _Bloom(
+            progress: progress,
+            threshold: threshold,
+            child: WildflowerIcon(flower, size: 44),
           ),
         ),
         Container(
@@ -191,13 +194,95 @@ class _TimelineItem extends StatelessWidget {
   }
 }
 
-class _StemPainter extends CustomPainter {
-  _StemPainter(this.progress);
+/// Abre la flor cuando el tallo llega a [threshold] y la cierra al volver.
+/// Solo se reconstruye cuando cruza el umbral, no en cada pixel de scroll.
+class _Bloom extends StatefulWidget {
+  const _Bloom({
+    required this.progress,
+    required this.threshold,
+    required this.child,
+  });
 
-  final double progress;
+  final ValueListenable<double> progress;
+  final double threshold;
+  final Widget child;
+
+  @override
+  State<_Bloom> createState() => _BloomState();
+}
+
+class _BloomState extends State<_Bloom> {
+  late bool _open = widget.progress.value >= widget.threshold;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.progress.addListener(_onProgress);
+  }
+
+  @override
+  void didUpdateWidget(covariant _Bloom oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.progress != widget.progress) {
+      oldWidget.progress.removeListener(_onProgress);
+      widget.progress.addListener(_onProgress);
+      _onProgress();
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.progress.removeListener(_onProgress);
+    super.dispose();
+  }
+
+  void _onProgress() {
+    final open = widget.progress.value >= widget.threshold;
+    if (open != _open) {
+      setState(() => _open = open);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return RepaintBoundary(
+      child: AnimatedScale(
+        scale: _open ? 1 : 0.25,
+        duration: AppMotion.bloom,
+        curve: AppMotion.sproutCurve,
+        child: AnimatedRotation(
+          turns: _open ? 0 : -0.15,
+          duration: AppMotion.bloom,
+          curve: AppMotion.organic,
+          child: widget.child,
+        ),
+      ),
+    );
+  }
+}
+
+/// Progreso fijo en 1 para cuando se pide reducir el movimiento.
+class _Full implements ValueListenable<double> {
+  const _Full();
+
+  @override
+  double get value => 1;
+
+  @override
+  void addListener(VoidCallback listener) {}
+
+  @override
+  void removeListener(VoidCallback listener) {}
+}
+
+class _StemPainter extends CustomPainter {
+  _StemPainter(this.listenable) : super(repaint: listenable);
+
+  final ValueListenable<double> listenable;
 
   @override
   void paint(Canvas canvas, Size size) {
+    final progress = listenable.value;
     if (progress <= 0) {
       return;
     }
@@ -220,7 +305,7 @@ class _StemPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _StemPainter oldDelegate) =>
-      oldDelegate.progress != progress;
+      oldDelegate.listenable != listenable;
 }
 
 IconData _scheduleIcon(String title, int index) {

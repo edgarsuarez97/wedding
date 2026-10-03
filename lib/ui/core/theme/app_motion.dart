@@ -12,10 +12,12 @@ class AppMotion {
   static const Duration butterflyFlight = Duration(seconds: 11);
   static const Duration butterflyEvery = Duration(seconds: 26);
   static const Duration cornerSway = Duration(seconds: 6);
+  static const Duration wheelScroll = Duration(milliseconds: 520);
 
   static const Curve organic = Curves.easeOutCubic;
   static const Curve sproutCurve = Curves.easeOutBack;
   static const Curve gentle = Curves.easeInOutSine;
+  static const Curve wheelCurve = Curves.easeOutQuart;
 
   /// Indica si el visitante pidió reducir el movimiento.
   static bool reduced(BuildContext context) =>
