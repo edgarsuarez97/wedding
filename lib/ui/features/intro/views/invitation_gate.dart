@@ -3,9 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../home/cubit/invitation_cubit.dart';
 import '../../home/cubit/wedding_content_cubit.dart';
-import 'envelope_intro.dart';
+import 'gatefold_intro.dart';
 
-/// Muestra el sobre animado encima del sitio hasta que se abre la invitación.
+/// Muestra la portada floral animada encima del sitio hasta que se abre la invitación.
 ///
 /// El sitio se construye detrás desde el inicio, así que al abrir el sobre ya
 /// está cargado.
@@ -26,7 +26,7 @@ class InvitationGate extends StatelessWidget {
         Positioned.fill(child: child),
         if (!isOpen)
           Positioned.fill(
-            child: EnvelopeIntro(
+            child: GatefoldIntro(
               dateLabel: weddingDate == null
                   ? '28 · 08 · 2027'
                   : _formatDate(weddingDate),

@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:wedding_g_and_e/app.dart';
-import 'package:wedding_g_and_e/ui/features/intro/views/envelope_intro.dart';
+import 'package:wedding_g_and_e/ui/features/intro/views/gatefold_intro.dart';
 
 void main() {
-  testWidgets('Muestra el sobre sellado al entrar al sitio', (
+  testWidgets('Muestra la portada sellada al entrar al sitio', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(const WeddingApp());
 
-    expect(find.byType(EnvelopeIntro), findsOneWidget);
+    expect(find.byType(GatefoldIntro), findsOneWidget);
     expect(find.text('Toca el sello para abrir'), findsOneWidget);
     expect(find.text('Ver invitación'), findsNothing);
   });
@@ -19,7 +19,7 @@ void main() {
   ) async {
     var opened = false;
     await tester.pumpWidget(
-      MaterialApp(home: EnvelopeIntro(onOpened: () => opened = true)),
+      MaterialApp(home: GatefoldIntro(onOpened: () => opened = true)),
     );
 
     await tester.tap(find.byKey(const ValueKey('envelope-seal')));
