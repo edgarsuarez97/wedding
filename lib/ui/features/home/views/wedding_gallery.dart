@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:wedding_g_and_e/ui/core/garden/garden_card.dart';
+import 'package:wedding_g_and_e/ui/core/theme/app_theme.dart';
 
 class GallerySection extends StatelessWidget {
   const GallerySection({super.key, required this.images});
@@ -12,11 +14,12 @@ class GallerySection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Momentos en fotos',
-          style: Theme.of(context).textTheme.headlineMedium,
+        const GardenHeading(
+          eyebrow: 'Galería',
+          title: 'Momentos ',
+          accent: 'en fotos',
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 22),
         _PolaroidCarousel(images: images),
       ],
     );
@@ -146,10 +149,10 @@ class _PolaroidCarouselState extends State<_PolaroidCarousel> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final frameWidth = constraints.maxWidth.clamp(280.0, 540.0).toDouble();
+        final frameWidth = constraints.maxWidth.clamp(260.0, 400.0).toDouble();
         final frameHeight = frameWidth * 1.22;
 
-        return GestureDetector(
+        final carousel = GestureDetector(
           onHorizontalDragUpdate: _onDragUpdate,
           onHorizontalDragEnd: _onDragEnd,
           behavior: HitTestBehavior.opaque,
@@ -233,7 +236,78 @@ class _PolaroidCarouselState extends State<_PolaroidCarousel> {
             ),
           ),
         );
+        if (!_hasMultiple) {
+          return carousel;
+        }
+        return Column(
+          children: [
+            carousel,
+            const SizedBox(height: 18),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _ArrowButton(
+                  icon: Icons.chevron_left,
+                  tooltip: 'Foto anterior',
+                  onPressed: () {
+                    _goPrevious();
+                    _startTimer();
+                  },
+                ),
+                const SizedBox(width: 16),
+                for (var i = 0; i < widget.images.length; i++)
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    width: i == _currentIndex ? 12 : 9,
+                    height: i == _currentIndex ? 12 : 9,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: i == _currentIndex
+                          ? AppTheme.bubblegum
+                          : AppTheme.mint,
+                    ),
+                  ),
+                const SizedBox(width: 16),
+                _ArrowButton(
+                  icon: Icons.chevron_right,
+                  tooltip: 'Foto siguiente',
+                  onPressed: () {
+                    _goNext();
+                    _startTimer();
+                  },
+                ),
+              ],
+            ),
+          ],
+        );
       },
+    );
+  }
+}
+
+class _ArrowButton extends StatelessWidget {
+  const _ArrowButton({
+    required this.icon,
+    required this.tooltip,
+    required this.onPressed,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      tooltip: tooltip,
+      onPressed: onPressed,
+      icon: Icon(icon, color: AppTheme.ink),
+      style: IconButton.styleFrom(
+        backgroundColor: Colors.white.withValues(alpha: 0.6),
+        side: const BorderSide(color: AppTheme.stem),
+        fixedSize: const Size(44, 44),
+      ),
     );
   }
 }
@@ -246,11 +320,10 @@ class _PolaroidFrame extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    return Container(
+    final frame = Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(4),
         boxShadow: [
           BoxShadow(
             color: const Color(0xFF4A4A4A).withValues(alpha: 0.20),
@@ -262,7 +335,7 @@ class _PolaroidFrame extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.fromLTRB(12, 12, 12, 16),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Expanded(
               child: ClipRRect(
@@ -286,16 +359,31 @@ class _PolaroidFrame extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 10),
-            Text(
-              caption,
-              style: textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFF5E5A54),
-              ),
-            ),
+            Center(child: Text(caption, style: AppTheme.script(fontSize: 26))),
           ],
         ),
       ),
+    );
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Positioned.fill(child: frame),
+        Positioned(
+          top: -9,
+          left: 0,
+          right: 0,
+          child: Center(
+            child: Transform.rotate(
+              angle: -0.05,
+              child: Container(
+                width: 74,
+                height: 22,
+                color: AppTheme.lavender.withValues(alpha: 0.75),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

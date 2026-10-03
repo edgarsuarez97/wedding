@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:wedding_g_and_e/ui/core/theme/app_motion.dart';
 
 enum RevealFrom { left, right }
 
 class ScrollReveal extends StatefulWidget {
   const ScrollReveal({
-    super.key, 
+    super.key,
     required this.child,
     this.from = RevealFrom.left,
     this.delayMs = 0,
@@ -97,20 +98,25 @@ class _ScrollRevealState extends State<ScrollReveal> {
 
   @override
   Widget build(BuildContext context) {
-    final hiddenOffset = widget.from == RevealFrom.left
-        ? const Offset(-0.12, 0)
-        : const Offset(0.12, 0);
-
-    return AnimatedOpacity(
-      opacity: _revealed ? 1 : 0,
-      duration: const Duration(milliseconds: 720),
-      curve: Curves.easeOutCubic,
-      child: AnimatedSlide(
-        offset: _revealed ? Offset.zero : hiddenOffset,
-        duration: const Duration(milliseconds: 720),
-        curve: Curves.easeOutCubic,
-        child: widget.child,
-      ),
+    // Aparición "en flor": sube, se endereza y se asienta.
+    final tilt = widget.from == RevealFrom.left ? -0.018 : 0.018;
+    return TweenAnimationBuilder<double>(
+      tween: Tween(end: _revealed ? 1 : 0),
+      duration: AppMotion.reveal,
+      curve: AppMotion.organic,
+      child: widget.child,
+      builder: (context, t, child) {
+        return Opacity(
+          opacity: t,
+          child: Transform.translate(
+            offset: Offset(0, 26 * (1 - t)),
+            child: Transform.rotate(
+              angle: tilt * (1 - t),
+              child: Transform.scale(scale: 0.96 + 0.04 * t, child: child),
+            ),
+          ),
+        );
+      },
     );
   }
 }

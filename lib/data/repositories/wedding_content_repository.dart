@@ -5,7 +5,7 @@ class WeddingContentRepository {
   Future<WeddingContent> fetchContent() {
     return Future<WeddingContent>.value(
       WeddingContent(
-        coupleNames: 'G & E',
+        coupleNames: 'Gabriela & Edgar',
         weddingDate: DateTime(2027, 8, 28, 16),
         heroImageUrl:
             'https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&w=1400&q=80',

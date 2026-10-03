@@ -11,34 +11,35 @@ Antes de cambiar estilos, leer `lib/ui/core/theme/app_theme.dart`. Ese archivo e
 
 ## Paleta
 
-Base actual en `AppTheme`: `mint #BED7D1`, `lavender #F7C4F7`, `lime #E7FBD4`, `rose #F8E1E7`, `blush #F8D1E0`, texto `#2F3843`.
+Paleta "Garden Party" elegida por Edgar. Está en `AppTheme` como constantes con nombre:
 
-Para la temática de jardín, ampliar con tonos que ya aparecen en las ilustraciones SVG del repo:
-
-| Rol | Tono | Uso |
+| Rol | Constante | Tono |
 |---|---|---|
-| Hoja profunda | `#6F8A65` | tallos, detalles finos, iconos |
-| Salvia | `#8EA883` | trazos principales, acentos |
-| Brote | `#B1C7A1` | rellenos suaves, separadores |
-| Peonía | `#E4B8C8` | flores, botones secundarios |
-| Durazno | `#F1CAA1` | flores cálidas, destellos |
-| Papel | blanco con `paper_texture.jpg` | fondo |
+| Azul campanilla | `bellBlue` | `#9DBCE6` |
+| Oliva | `oliveLeaf` | `#B6C489` |
+| Rosa guisante | `sweetPea` | `#F4C3D3` |
+| Durazno | `peach` | `#FFCC8F` |
+| Mantequilla | `butter` | `#FFEB9F` |
+| Lavanda | `lavender` | `#C9C1E3` |
+
+Apoyo: `sky #BCD7F2`, `lilac #DCC2F1`, `bubblegum #FFA8C1`, `mint #B7D7AA`, `cream #F8F0B0`. Papel: `paper #FBF9F3` con `paper_texture.jpg` al 50 %.
 
 Reglas:
-- Verdes para estructura (tallos, líneas, bordes), rosas y durazno para las flores y los momentos importantes.
-- Máximo un acento saturado por sección.
-- El texto siempre en `#2F3843` (u oscuro equivalente) sobre fondos claros; verificar contraste AA (4.5:1) en texto normal. Los pasteles no sirven como color de texto.
+- Los pasteles son para flores, fondos y adornos, nunca para texto.
+- Texto en `ink #34392F` o `inkSoft #5E6457`. Etiquetas en `olive #6F7D45`. Acento de títulos (cursiva) en `lavenderInk #8A6FC0`. Firmas en caligrafía en `roseInk #B95A84`. Tallos en `stem #93A160`.
+- Botón principal: `bubblegum` con texto `ink` (el blanco no tiene contraste).
+- Verificar contraste AA (4.5:1) en texto normal.
 
 ## Tipografía
 
-- Títulos: Playfair Display (ya configurada en `displayLarge` … `titleLarge`).
-- Cuerpo: Source Sans 3.
-- Si se agrega una caligráfica (nombres, monograma, "Save the date"), usar solo para 1 a 4 palabras por pantalla, nunca para párrafos, y cargarla desde `google_fonts`.
+- Nombres y frases cortas: Pinyon Script (`AppTheme.script`), máximo 1 a 4 palabras.
+- Títulos: Cormorant Garamond (`AppTheme.display`), con una parte en cursiva lavanda (`GardenHeading`).
+- Cuerpo: Jost.
 - El monograma G&E se usa como SVG (texto convertido a trazos), no como fuente.
 
 ## Ornamentos botánicos
 
-- Ilustraciones estilo acuarela con trazos de línea fina: hojas, enredaderas, ramas, peonías, flores silvestres.
+- Flores silvestres, **sin rosas ni margaritas**: campanillas, lirios (rosa pastel, no naranja), orquídeas, guisantes de olor, nomeolvides, botones de oro, espuelas de caballero y paniculata, más hojas menta y briznas. Están en `assets/illustrations/wildflowers/` y se usan con `WildflowerIcon`.
 - Las esquinas florales enmarcan, no tapan contenido: ubicarlas en bordes y esquinas con `Positioned`, a baja opacidad cuando quedan detrás de texto.
 - Asimetría natural: una esquina florida y la opuesta con una rama ligera se ve más orgánico que cuatro esquinas idénticas.
 - Separadores entre secciones: una rama o enredadera horizontal en lugar de `Divider`.

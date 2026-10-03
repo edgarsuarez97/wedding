@@ -7,7 +7,10 @@ import 'package:just_audio/just_audio.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:wedding_g_and_e/ui/features/home/views/components/scroll.dart';
 import 'package:wedding_g_and_e/ui/features/home/views/components/section_container.dart';
+import 'package:wedding_g_and_e/ui/core/garden/garden_divider.dart';
+import 'package:wedding_g_and_e/ui/core/garden/garden_ornaments.dart';
 import 'package:wedding_g_and_e/ui/features/home/views/wedding_counter.dart';
+import 'package:wedding_g_and_e/ui/features/home/views/wedding_dress_code.dart';
 import 'package:wedding_g_and_e/ui/features/home/views/wedding_gallery.dart';
 import 'package:wedding_g_and_e/ui/features/home/views/wedding_itinerary.dart';
 import 'package:wedding_g_and_e/ui/features/home/views/wedding_rsvp.dart';
@@ -185,171 +188,167 @@ class _WeddingExperienceState extends State<WeddingExperience> {
     }
   }
 
+  final _dressCodeKey = GlobalKey();
+
+  Widget _pair(bool isDesktop, Widget first, Widget second) {
+    if (isDesktop) {
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: ScrollReveal(from: RevealFrom.left, child: first),
+          ),
+          const SizedBox(width: 28),
+          Expanded(
+            child: ScrollReveal(
+              from: RevealFrom.right,
+              delayMs: 150,
+              child: second,
+            ),
+          ),
+        ],
+      );
+    }
+    return Column(
+      children: [
+        ScrollReveal(from: RevealFrom.left, child: first),
+        const SizedBox(height: 28),
+        ScrollReveal(from: RevealFrom.right, child: second),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.paper,
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final isDesktop = constraints.maxWidth >= 920;
+      body: Stack(
+        children: [
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isDesktop = constraints.maxWidth >= 920;
 
-          return SingleChildScrollView(
-            child: DecoratedBox(
-              decoration: const BoxDecoration(
-                color: AppTheme.paper,
-                image: DecorationImage(
-                  image: AssetImage('assets/illustrations/paper_texture.jpg'),
-                  fit: BoxFit.none,
-                  repeat: ImageRepeat.repeat,
-                  opacity: 1,
-                ),
-              ),
-              child: Column(
-                children: [
-                  HeroSection(
-                    weddingDate: widget.content.weddingDate,
-                    heroImageUrl: widget.content.heroImageUrl,
-                    coupleNames: widget.content.coupleNames,
-                    isMusicPlaying: _isHeroMusicPlaying,
-                    isMusicBusy: _isPreparingAudio,
-                    onToggleMusic: _toggleHeroMusic,
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 2),
-                    child: Transform.translate(
-                      offset: const Offset(0, -2),
-                      child: Column(
-                        children: [
-                          HeroEventDetailsSection(
-                            weddingDate: widget.content.weddingDate,
-                          ),
-
-                          //Story and Schedule
-                          SectionContainer(
-                            background: Colors.transparent,
-                            decorationMode: SectionDecorationMode.vineGarden,
-                            child: isDesktop
-                                ? Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Expanded(
-                                        child: ScrollReveal(
-                                          from: RevealFrom.left,
-                                          child: StorySection(
-                                            story: widget.content.story,
-                                          ),
-                                        ),
-                                      ),
-                                      SizedBox(width: 28),
-                                      Expanded(
-                                        child: ScrollReveal(
-                                          from: RevealFrom.right,
-                                          child: ScheduleSection(
-                                            schedule: widget.content.schedule,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  )
-                                : Column(
-                                    children: [
-                                      ScrollReveal(
-                                        from: RevealFrom.left,
-                                        child: StorySection(
-                                          story: widget.content.story,
-                                        ),
-                                      ),
-                                      SizedBox(height: 28),
-                                      ScrollReveal(
-                                        from: RevealFrom.right,
-                                        child: ScheduleSection(
-                                          schedule: widget.content.schedule,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                          ),
-
-                          //Pictures and Video section
-                          SectionContainer(
-                            background: Colors.transparent,
-                            decorationMode:
-                                SectionDecorationMode.softFloralCorners,
-                            child: isDesktop
-                                ? Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Expanded(
-                                        child: ScrollReveal(
-                                          from: RevealFrom.left,
-                                          child: GallerySection(
-                                            images:
-                                                widget.content.galleryImageUrls,
-                                          ),
-                                        ),
-                                      ),
-                                      SizedBox(width: 28),
-                                      Expanded(
-                                        child: ScrollReveal(
-                                          from: RevealFrom.right,
-                                          child: VideoSection(
-                                            videoUrl: widget.content.videoUrl,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  )
-                                : Column(
-                                    children: [
-                                      ScrollReveal(
-                                        from: RevealFrom.left,
-                                        child: GallerySection(
-                                          images:
-                                              widget.content.galleryImageUrls,
-                                        ),
-                                      ),
-                                      SizedBox(height: 28),
-                                      ScrollReveal(
-                                        from: RevealFrom.right,
-                                        child: VideoSection(
-                                          videoUrl: widget.content.videoUrl,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                          ),
-
-                          //RSVP section
-                          SectionContainer(
-                            background: Colors.transparent,
-                            decorationMode: SectionDecorationMode.roseFrame,
-                            child: ScrollReveal(
-                              from: RevealFrom.left,
-                              delayMs: 90,
-                              child: const RsvpSection(),
-                            ),
-                          ),
-
-                          //Venue and FAQ section
-                          SectionContainer(
-                            background: Colors.transparent,
-                            decorationMode: SectionDecorationMode.vineGarden,
-                            child: ScrollReveal(
-                              from: RevealFrom.right,
-                              child: const VenueAndFaqSection(),
-                            ),
-                          ),
-                        ],
+              return SingleChildScrollView(
+                child: DecoratedBox(
+                  decoration: const BoxDecoration(
+                    color: AppTheme.paper,
+                    image: DecorationImage(
+                      image: AssetImage(
+                        'assets/illustrations/paper_texture.jpg',
                       ),
+                      fit: BoxFit.none,
+                      repeat: ImageRepeat.repeat,
+                      opacity: 0.5,
                     ),
                   ),
-                ],
+                  child: Column(
+                    children: [
+                      HeroSection(
+                        weddingDate: widget.content.weddingDate,
+                        heroImageUrl: widget.content.heroImageUrl,
+                        coupleNames: widget.content.coupleNames,
+                        isMusicPlaying: _isHeroMusicPlaying,
+                        isMusicBusy: _isPreparingAudio,
+                        onToggleMusic: _toggleHeroMusic,
+                      ),
+                      HeroEventDetailsSection(
+                        weddingDate: widget.content.weddingDate,
+                      ),
+                      const GardenDivider(),
+
+                      // Historia e itinerario
+                      SectionContainer(
+                        background: Colors.transparent,
+                        child: _pair(
+                          isDesktop,
+                          StorySection(story: widget.content.story),
+                          ScheduleSection(schedule: widget.content.schedule),
+                        ),
+                      ),
+                      const GardenDivider(),
+
+                      // Código de vestimenta
+                      SectionContainer(
+                        key: _dressCodeKey,
+                        background: Colors.transparent,
+                        child: const ScrollReveal(child: DressCodeSection()),
+                      ),
+                      const GardenDivider(),
+
+                      // Fotos y video
+                      SectionContainer(
+                        background: Colors.transparent,
+                        child: _pair(
+                          isDesktop,
+                          GallerySection(
+                            images: widget.content.galleryImageUrls,
+                          ),
+                          VideoSection(videoUrl: widget.content.videoUrl),
+                        ),
+                      ),
+                      const GardenDivider(),
+
+                      // Confirmación de asistencia
+                      const Padding(
+                        padding: EdgeInsets.only(top: 40),
+                        child: SectionContainer(
+                          background: Colors.transparent,
+                          child: ScrollReveal(child: RsvpSection()),
+                        ),
+                      ),
+                      const GardenDivider(),
+
+                      // Agradecimiento, lugar y preguntas
+                      SectionContainer(
+                        background: Colors.transparent,
+                        child: VenueAndFaqSection(dressCodeKey: _dressCodeKey),
+                      ),
+                      const _Footer(),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+          const Positioned.fill(child: GardenButterfly()),
+        ],
+      ),
+    );
+  }
+}
+
+class _Footer extends StatelessWidget {
+  const _Footer();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 60),
+      child: Column(
+        children: [
+          Container(
+            width: 70,
+            height: 70,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: AppTheme.lavenderInk),
+            ),
+            child: Text(
+              'G&E',
+              style: AppTheme.display(
+                fontSize: 24,
+                color: AppTheme.lavenderInk,
+                fontStyle: FontStyle.italic,
               ),
             ),
-          );
-        },
+          ),
+          const SizedBox(height: 10),
+          Text(
+            '28 · 08 · 2027 · VALENCIA',
+            style: AppTheme.eyebrow(color: AppTheme.inkSoft),
+          ),
+        ],
       ),
     );
   }

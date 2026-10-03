@@ -1,7 +1,9 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:wedding_g_and_e/domain/models/schedule_item.dart';
+import 'package:wedding_g_and_e/ui/core/garden/garden_card.dart';
+import 'package:wedding_g_and_e/ui/core/garden/viewport.dart';
+import 'package:wedding_g_and_e/ui/core/garden/wildflower.dart';
+import 'package:wedding_g_and_e/ui/core/theme/app_motion.dart';
 import 'package:wedding_g_and_e/ui/core/theme/app_theme.dart';
 
 class StorySection extends StatelessWidget {
@@ -12,43 +14,31 @@ class StorySection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Nuestra historia', style: textTheme.headlineMedium),
-        const SizedBox(height: 14),
-        Text(
-          story,
-          style: textTheme.titleMedium?.copyWith(
-            height: 1.5,
-            color: const Color(0xFF5E646B),
+    return GardenCard(
+      withBouquet: true,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const GardenHeading(
+            eyebrow: 'Nuestra historia',
+            title: 'Una cafetería,\n',
+            accent: 'una promesa',
           ),
-        ),
-        const SizedBox(height: 24),
-        Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(26),
-            gradient: const LinearGradient(
-              colors: [AppTheme.rose, AppTheme.lavender, Colors.white],
+          const SizedBox(height: 18),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 560),
+            child: Text(
+              story,
+              style: textTheme.bodyLarge?.copyWith(fontSize: 18),
             ),
           ),
-          padding: const EdgeInsets.all(20),
-          child: Row(
-            children: [
-              const Icon(Icons.auto_awesome, color: Color(0xFF866574)),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'Código de vestimenta: formal de jardín en colores suaves. La recepción continúa con una fiesta bajo la luna.',
-                  style: textTheme.bodyLarge?.copyWith(
-                    color: const Color(0xFF4C5258),
-                  ),
-                ),
-              ),
-            ],
+          const SizedBox(height: 18),
+          Text(
+            'Gabita & Edgar',
+            style: AppTheme.script(fontSize: 34, color: AppTheme.roseInk),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -58,252 +48,179 @@ class ScheduleSection extends StatelessWidget {
 
   final List<ScheduleItem> schedule;
 
+  static const _flowers = [
+    Wildflower.forgetMeNot,
+    Wildflower.orchid,
+    Wildflower.buttercup,
+    Wildflower.lily,
+    Wildflower.bellflower,
+  ];
+
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isCompact = constraints.maxWidth < 760;
-        final lineLeft = isCompact ? 26.0 : (constraints.maxWidth / 2) - 1;
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Itinerario de la boda', style: textTheme.headlineMedium),
-            const SizedBox(height: 16),
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.fromLTRB(
-                isCompact ? 8 : 18,
-                isCompact ? 28 : 34,
-                isCompact ? 8 : 18,
-                isCompact ? 28 : 34,
-              ),
-              child: _GlassPanel(
-                borderRadius: 26,
-                padding: EdgeInsets.fromLTRB(
-                  isCompact ? 8 : 18,
-                  isCompact ? 28 : 34,
-                  isCompact ? 8 : 18,
-                  isCompact ? 28 : 34,
-                ),
-                child: Stack(
-                  children: [
-                    Positioned(
-                      top: 6,
-                      bottom: 6,
-                      left: lineLeft,
-                      child: Container(
-                        width: 2,
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              Color(0xFF3F3A35),
-                              Color(0xFF6F665C),
-                              Color(0xFF3F3A35),
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                      ),
-                    ),
-                    Column(
+    return GardenCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const GardenHeading(
+            eyebrow: 'Itinerario de la boda',
+            title: 'El día, ',
+            accent: 'hora a hora',
+          ),
+          const SizedBox(height: 22),
+          // El tallo crece con el scroll y se recoge al volver a subir.
+          ViewportProgressBuilder(
+            builder: (context, rawProgress, _) {
+              final progress = AppMotion.reduced(context) ? 1.0 : rawProgress;
+              return Stack(
+                children: [
+                  Positioned(
+                    left: 0,
+                    top: 0,
+                    bottom: 0,
+                    width: 56,
+                    child: CustomPaint(painter: _StemPainter(progress)),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 64),
+                    child: Column(
                       children: [
-                        ...schedule.asMap().entries.map((entry) {
-                          return Padding(
+                        for (final (i, item) in schedule.indexed)
+                          Padding(
                             padding: EdgeInsets.only(
-                              bottom: entry.key == schedule.length - 1 ? 0 : 14,
+                              bottom: i == schedule.length - 1 ? 0 : 20,
                             ),
-                            child: _TimelineEventRow(
-                              item: entry.value,
-                              icon: _scheduleIcon(entry.value.title, entry.key),
-                              isLeft: entry.key.isEven,
-                              isCompact: isCompact,
+                            child: _TimelineItem(
+                              item: item,
+                              icon: _scheduleIcon(item.title, i),
+                              flower: _flowers[i % _flowers.length],
+                              open: progress >= (i + 0.15) / schedule.length,
                             ),
-                          );
-                        }),
+                          ),
                       ],
                     ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        );
-      },
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
     );
   }
 }
 
-class _TimelineEventRow extends StatelessWidget {
-  const _TimelineEventRow({
+class _TimelineItem extends StatelessWidget {
+  const _TimelineItem({
     required this.item,
     required this.icon,
-    required this.isLeft,
-    required this.isCompact,
+    required this.flower,
+    required this.open,
   });
 
   final ScheduleItem item;
   final IconData icon;
-  final bool isLeft;
-  final bool isCompact;
+  final Wildflower flower;
+  final bool open;
 
   @override
   Widget build(BuildContext context) {
-    if (isCompact) {
-      return Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(width: 8),
-          _TimelineMarker(icon: icon),
-          const SizedBox(width: 12),
-          Expanded(child: _TimelineEventCard(item: item, alignRight: false)),
-        ],
-      );
-    }
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    final textTheme = Theme.of(context).textTheme;
+    return Stack(
+      clipBehavior: Clip.none,
       children: [
-        Expanded(
-          child: isLeft
-              ? _TimelineEventCard(item: item, alignRight: true)
-              : const SizedBox.shrink(),
+        Positioned(
+          left: -58,
+          top: 8,
+          child: AnimatedScale(
+            scale: open ? 1 : 0.25,
+            duration: AppMotion.bloom,
+            curve: AppMotion.sproutCurve,
+            child: AnimatedRotation(
+              turns: open ? 0 : -0.15,
+              duration: AppMotion.bloom,
+              curve: AppMotion.organic,
+              child: WildflowerIcon(flower, size: 44),
+            ),
+          ),
         ),
-        const SizedBox(width: 20),
-        _TimelineMarker(icon: icon),
-        const SizedBox(width: 20),
-        Expanded(
-          child: !isLeft
-              ? _TimelineEventCard(item: item, alignRight: false)
-              : const SizedBox.shrink(),
+        Container(
+          padding: const EdgeInsets.fromLTRB(16, 14, 14, 14),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.55),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0x2E93A160)),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.timeLabel,
+                      style: AppTheme.eyebrow().copyWith(letterSpacing: 1.8),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(item.title, style: AppTheme.display(fontSize: 22)),
+                    const SizedBox(height: 4),
+                    Text(
+                      item.description,
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: AppTheme.inkSoft,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Container(
+                width: 44,
+                height: 44,
+                decoration: const BoxDecoration(
+                  color: AppTheme.mint,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, size: 21, color: AppTheme.ink),
+              ),
+            ],
+          ),
         ),
       ],
     );
   }
 }
 
-class _TimelineMarker extends StatelessWidget {
-  const _TimelineMarker({required this.icon});
+class _StemPainter extends CustomPainter {
+  _StemPainter(this.progress);
 
-  final IconData icon;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 32,
-      height: 32,
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFFEFB),
-        shape: BoxShape.circle,
-        border: Border.all(color: const Color(0xFF3A3530), width: 1.4),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF5E5140).withValues(alpha: 0.10),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Icon(icon, size: 15, color: const Color(0xFF2F2B27)),
-    );
-  }
-}
-
-class _TimelineEventCard extends StatelessWidget {
-  const _TimelineEventCard({required this.item, required this.alignRight});
-
-  final ScheduleItem item;
-  final bool alignRight;
+  final double progress;
 
   @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    return Align(
-      alignment: alignRight ? Alignment.centerRight : Alignment.centerLeft,
-      child: _GlassPanel(
-        borderRadius: 16,
-        constraints: const BoxConstraints(maxWidth: 360),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        child: Column(
-          crossAxisAlignment: alignRight
-              ? CrossAxisAlignment.end
-              : CrossAxisAlignment.start,
-          children: [
-            Text(
-              item.timeLabel,
-              style: textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.4,
-                color: const Color(0xFF4F443A),
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              item.title,
-              textAlign: alignRight ? TextAlign.right : TextAlign.left,
-              style: textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFF312A24),
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              item.description,
-              textAlign: alignRight ? TextAlign.right : TextAlign.left,
-              style: textTheme.bodyMedium?.copyWith(
-                height: 1.4,
-                color: const Color(0xFF665C53),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+  void paint(Canvas canvas, Size size) {
+    if (progress <= 0) {
+      return;
+    }
+    final path = Path()..moveTo(28, 0);
+    const segments = 6;
+    final step = size.height / segments;
+    for (var k = 1; k <= segments; k++) {
+      final sway = k.isOdd ? 18.0 : 38.0;
+      path.quadraticBezierTo(sway, step * k - step / 2, 28, step * k);
+    }
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2
+      ..strokeCap = StrokeCap.round
+      ..color = AppTheme.stem;
+    for (final metric in path.computeMetrics()) {
+      canvas.drawPath(metric.extractPath(0, metric.length * progress), paint);
+    }
   }
-}
-
-class _GlassPanel extends StatelessWidget {
-  const _GlassPanel({
-    required this.child,
-    required this.borderRadius,
-    this.padding,
-    this.constraints,
-  });
-
-  final Widget child;
-  final double borderRadius;
-  final EdgeInsetsGeometry? padding;
-  final BoxConstraints? constraints;
 
   @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(borderRadius),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-        child: Container(
-          constraints: constraints,
-          padding: padding,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(borderRadius),
-            color: Colors.white.withValues(alpha: 0.30),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.55)),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF6A5943).withValues(alpha: 0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 3),
-              ),
-            ],
-          ),
-          child: child,
-        ),
-      ),
-    );
-  }
+  bool shouldRepaint(covariant _StemPainter oldDelegate) =>
+      oldDelegate.progress != progress;
 }
 
 IconData _scheduleIcon(String title, int index) {
@@ -322,7 +239,7 @@ IconData _scheduleIcon(String title, int index) {
     return Icons.music_note_outlined;
   }
   if (normalized.contains('llegada') || normalized.contains('bienvenida')) {
-    return Icons.celebration;
+    return Icons.local_drink_outlined;
   }
 
   return switch (index % 4) {
