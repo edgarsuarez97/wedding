@@ -8,7 +8,7 @@ import 'package:wedding_g_and_e/ui/core/garden/wildflower.dart';
 import 'package:wedding_g_and_e/ui/core/theme/app_motion.dart';
 import 'package:wedding_g_and_e/ui/core/theme/app_theme.dart';
 import 'package:wedding_g_and_e/ui/features/home/cubit/rsvp_cubit.dart';
-import 'package:wedding_g_and_e/ui/features/home/views/wedding_home_page.dart';
+import 'package:intl/intl.dart';
 
 const _attending = 'Asistiré con gusto';
 const _notAttending = 'Con cariño, no podré asistir';
@@ -29,6 +29,7 @@ class _RsvpSectionState extends State<RsvpSection> {
   String _attendance = _attending;
   int _guestCount = 1;
   String? _thanks;
+  String? _prefilledFor;
 
   @override
   void dispose() {
@@ -38,13 +39,19 @@ class _RsvpSectionState extends State<RsvpSection> {
     super.dispose();
   }
 
-  void _celebrate() {
+  void _celebrate({required bool updated}) {
     final firstName = _nameController.text.trim().split(' ').first;
+    final attending = _attendance == _attending;
     setState(() {
-      _thanks = firstName.isEmpty
-          ? '¡Te esperamos!'
-          : '¡Gracias, $firstName! Te esperamos';
+      _thanks = switch ((updated, attending)) {
+        (true, _) => '¡Listo, $firstName! Actualizamos tu respuesta',
+        (false, true) => '¡Gracias, $firstName! Te esperamos',
+        (false, false) => 'Gracias por avisarnos, $firstName',
+      };
     });
+    if (!attending) {
+      return;
+    }
     final box = _submitKey.currentContext?.findRenderObject();
     if (box is RenderBox && box.attached) {
       showPetalBurst(context, box.localToGlobal(Offset.zero) & box.size);
@@ -59,11 +66,54 @@ class _RsvpSectionState extends State<RsvpSection> {
       RsvpSubmission(
         name: _nameController.text.trim(),
         email: _emailController.text.trim(),
-        attendance: _attendance,
+        attending: _attendance == _attending,
         guestCount: _guestCount,
         dietaryNotes: _dietaryController.text.trim(),
       ),
     );
+  }
+
+  /// Ya había respondido: le preguntamos antes de reemplazar su respuesta.
+  Future<void> _askOverwrite(DateTime? answeredAt) async {
+    final cubit = context.read<RsvpCubit>();
+    final when = answeredAt == null
+        ? 'antes'
+        : 'el ${DateFormat('d/M/yyyy').format(answeredAt)}';
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.paper,
+        title: Text(
+          'Ya habías respondido',
+          style: AppTheme.display(fontSize: 26),
+        ),
+        content: Text(
+          'Recibimos tu confirmación $when. Si respondes de nuevo, '
+          'reemplazaremos tu respuesta anterior. ¿Seguro que deseas '
+          'responder nuevamente?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            style: TextButton.styleFrom(foregroundColor: AppTheme.inkSoft),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppTheme.bubblegum,
+              foregroundColor: AppTheme.ink,
+            ),
+            child: const Text('Sí, actualizar'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed ?? false) {
+      await cubit.confirmOverwrite();
+    } else {
+      cubit.cancelOverwrite();
+    }
   }
 
   @override
@@ -90,9 +140,22 @@ class _RsvpSectionState extends State<RsvpSection> {
     );
 
     return BlocConsumer<RsvpCubit, RsvpState>(
+      listenWhen: (previous, current) =>
+          previous.status != current.status ||
+          previous.invite != current.invite,
       listener: (context, state) {
+        // Con enlace personal, el nombre ya viene escrito.
+        if (state.invite case final invite? when _prefilledFor != invite.code) {
+          _prefilledFor = invite.code;
+          if (_nameController.text.trim().isEmpty) {
+            _nameController.text = invite.name;
+          }
+          setState(() => _guestCount = _guestCount.clamp(1, invite.maxGuests));
+        }
         if (state.status == RsvpSubmissionStatus.success) {
-          _celebrate();
+          _celebrate(updated: state.updated);
+        } else if (state.status == RsvpSubmissionStatus.alreadyAnswered) {
+          _askOverwrite(state.answeredAt);
         } else if (state.message case final message?) {
           ScaffoldMessenger.of(
             context,
@@ -134,7 +197,9 @@ class _RsvpSectionState extends State<RsvpSection> {
                           ),
                           const SizedBox(height: 12),
                           Text(
-                            'Confírmanos tu asistencia para guardarte un lugar en el jardín.',
+                            state.invite == null
+                                ? 'Confírmanos tu asistencia para guardarte un lugar en el jardín.'
+                                : 'Invitación para ${state.invite!.name}. Confírmanos tu asistencia para guardarte un lugar en el jardín.',
                             textAlign: TextAlign.center,
                             style: textTheme.bodyLarge?.copyWith(
                               color: AppTheme.inkSoft,
@@ -166,17 +231,22 @@ class _RsvpSectionState extends State<RsvpSection> {
                             onChanged: (value) =>
                                 setState(() => _attendance = value),
                           ),
-                          const SizedBox(height: 16),
-                          _ChoiceGroup<int>(
-                            label: 'Número de asistentes',
-                            value: _guestCount,
-                            options: {
-                              for (var i = 1; i <= maxGuestsPerInvitation; i++)
-                                i: '$i invitado${i == 1 ? '' : 's'}',
-                            },
-                            onChanged: (value) =>
-                                setState(() => _guestCount = value),
-                          ),
+                          // Solo quien tiene más de un cupo elige cuántos
+                          // vienen; al resto ni se le muestra.
+                          if (state.maxGuests > 1 &&
+                              _attendance == _attending) ...[
+                            const SizedBox(height: 16),
+                            _ChoiceGroup<int>(
+                              label: 'Número de asistentes',
+                              value: _guestCount,
+                              options: {
+                                for (var i = 1; i <= state.maxGuests; i++)
+                                  i: i == 1 ? 'Solo yo' : '$i personas',
+                              },
+                              onChanged: (value) =>
+                                  setState(() => _guestCount = value),
+                            ),
+                          ],
                           const SizedBox(height: 20),
                           TextFormField(
                             controller: _dietaryController,
@@ -209,38 +279,6 @@ class _RsvpSectionState extends State<RsvpSection> {
                                 color: AppTheme.roseInk,
                               ),
                             ),
-                          ),
-                          const SizedBox(height: 8),
-                          Wrap(
-                            alignment: WrapAlignment.center,
-                            crossAxisAlignment: WrapCrossAlignment.center,
-                            children: [
-                              Text(
-                                '¿Prefieres Google Forms? ',
-                                style: textTheme.bodyMedium?.copyWith(
-                                  color: AppTheme.inkSoft,
-                                ),
-                              ),
-                              TextButton(
-                                onPressed: () => openExternal(
-                                  _googleFormLink(
-                                    name: _nameController.text.trim(),
-                                    email: _emailController.text.trim(),
-                                  ),
-                                ),
-                                style: TextButton.styleFrom(
-                                  foregroundColor: AppTheme.ink,
-                                  padding: EdgeInsets.zero,
-                                  minimumSize: const Size(0, 36),
-                                ),
-                                child: const Text(
-                                  'Abrir formulario externo',
-                                  style: TextStyle(
-                                    decoration: TextDecoration.underline,
-                                  ),
-                                ),
-                              ),
-                            ],
                           ),
                         ],
                       ),
@@ -486,11 +524,4 @@ class _CrownStemPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-String _googleFormLink({required String name, required String email}) {
-  final base = 'https://docs.google.com/forms/d/e/your-form-id/viewform';
-  final prefilledName = Uri.encodeQueryComponent(name);
-  final prefilledEmail = Uri.encodeQueryComponent(email);
-  return '$base?usp=pp_url&entry.1111111111=$prefilledName&entry.2222222222=$prefilledEmail';
 }

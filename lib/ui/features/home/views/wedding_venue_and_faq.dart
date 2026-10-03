@@ -84,7 +84,6 @@ class VenueAndFaqSection extends StatelessWidget {
         const SizedBox(height: 12),
         _FaqTile(
           question: '¿Qué debo vestir?',
-          initiallyOpen: true,
           answer: [
             const Text.rich(
               TextSpan(
@@ -203,19 +202,17 @@ class _FaqTile extends StatefulWidget {
   const _FaqTile({
     required this.question,
     required this.answer,
-    this.initiallyOpen = false,
   });
 
   final String question;
   final List<Widget> answer;
-  final bool initiallyOpen;
 
   @override
   State<_FaqTile> createState() => _FaqTileState();
 }
 
 class _FaqTileState extends State<_FaqTile> {
-  late bool _open = widget.initiallyOpen;
+  bool _open = false;
 
   @override
   Widget build(BuildContext context) {

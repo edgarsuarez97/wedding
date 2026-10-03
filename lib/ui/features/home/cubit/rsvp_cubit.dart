@@ -4,82 +4,134 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../data/repositories/rsvp_repository.dart';
 import '../../../../domain/models/rsvp_submission.dart';
 
-enum RsvpMode { native, google }
-
-enum RsvpSubmissionStatus { idle, submitting, success, failure }
-
-const maxGuestsPerInvitation = 2;
+enum RsvpSubmissionStatus {
+  idle,
+  submitting,
+  alreadyAnswered,
+  success,
+  failure,
+}
 
 class RsvpState extends Equatable {
   const RsvpState({
-    this.mode = RsvpMode.native,
     this.status = RsvpSubmissionStatus.idle,
+    this.invite,
     this.message,
+    this.answeredAt,
+    this.updated = false,
   });
 
-  final RsvpMode mode;
   final RsvpSubmissionStatus status;
+
+  /// Invitación del enlace personal, si entró con uno válido.
+  final GuestInvite? invite;
   final String? message;
 
+  /// Cuándo respondió antes, cuando [status] es alreadyAnswered.
+  final DateTime? answeredAt;
+
+  /// La última confirmación reemplazó una anterior.
+  final bool updated;
+
+  /// Sin enlace personal, cada quien confirma solo por sí mismo.
+  int get maxGuests => invite?.maxGuests ?? 1;
+
   RsvpState copyWith({
-    RsvpMode? mode,
     RsvpSubmissionStatus? status,
+    GuestInvite? invite,
     String? message,
-    bool clearMessage = false,
+    DateTime? answeredAt,
+    bool? updated,
   }) {
     return RsvpState(
-      mode: mode ?? this.mode,
       status: status ?? this.status,
-      message: clearMessage ? null : (message ?? this.message),
+      invite: invite ?? this.invite,
+      message: message,
+      answeredAt: answeredAt,
+      updated: updated ?? this.updated,
     );
   }
 
   @override
-  List<Object?> get props => [mode, status, message];
+  List<Object?> get props => [status, invite, message, answeredAt, updated];
 }
 
 class RsvpCubit extends Cubit<RsvpState> {
   RsvpCubit(this._repository) : super(const RsvpState());
 
   final RsvpRepository _repository;
+  RsvpSubmission? _pending;
 
-  void setMode(RsvpMode mode) {
-    emit(
-      state.copyWith(
-        mode: mode,
-        status: RsvpSubmissionStatus.idle,
-        clearMessage: true,
-      ),
-    );
-  }
-
-  Future<void> submit(RsvpSubmission submission) async {
-    if (submission.guestCount > maxGuestsPerInvitation) {
-      emit(
-        state.copyWith(
-          status: RsvpSubmissionStatus.failure,
-          message:
-              'El máximo permitido por invitación es de $maxGuestsPerInvitation asistentes.',
-        ),
-      );
+  /// Carga la invitación del enlace `?i=CODIGO`. Un código inválido o sin
+  /// conexión deja el formulario general.
+  Future<void> loadInvite(String? code) async {
+    final trimmed = code?.trim() ?? '';
+    if (trimmed.isEmpty) {
       return;
     }
-
-    emit(
-      state.copyWith(
-        status: RsvpSubmissionStatus.submitting,
-        clearMessage: true,
-      ),
-    );
     try {
-      await _repository.submitRsvp(submission);
-      emit(
-        state.copyWith(
-          status: RsvpSubmissionStatus.success,
-          message: 'Gracias. Tu confirmación fue enviada.',
-        ),
-      );
-    } catch (_) {
+      final invite = await _repository.fetchInvite(trimmed);
+      if (invite != null) {
+        emit(state.copyWith(invite: invite));
+      }
+    } on Object {
+      // Se queda con el formulario general.
+    }
+  }
+
+  Future<void> submit(RsvpSubmission submission) =>
+      _send(submission, overwrite: false);
+
+  /// El invitado confirmó que quiere reemplazar su respuesta anterior.
+  Future<void> confirmOverwrite() async {
+    final pending = _pending;
+    if (pending != null) {
+      await _send(pending, overwrite: true);
+    }
+  }
+
+  void cancelOverwrite() {
+    _pending = null;
+    emit(state.copyWith(status: RsvpSubmissionStatus.idle));
+  }
+
+  Future<void> _send(
+    RsvpSubmission submission, {
+    required bool overwrite,
+  }) async {
+    final guests = submission.attending
+        ? submission.guestCount.clamp(1, state.maxGuests)
+        : 0;
+    final request = RsvpSubmission(
+      name: submission.name,
+      email: submission.email,
+      attending: submission.attending,
+      guestCount: guests,
+      dietaryNotes: submission.dietaryNotes,
+      inviteCode: state.invite?.code,
+    );
+    _pending = request;
+    emit(state.copyWith(status: RsvpSubmissionStatus.submitting));
+    try {
+      final result = await _repository.submit(request, overwrite: overwrite);
+      switch (result) {
+        case RsvpSaved(:final updated):
+          _pending = null;
+          emit(
+            state.copyWith(
+              status: RsvpSubmissionStatus.success,
+              updated: updated,
+            ),
+          );
+        case RsvpAlreadyAnswered(:final answeredAt):
+          emit(
+            state.copyWith(
+              status: RsvpSubmissionStatus.alreadyAnswered,
+              answeredAt: answeredAt,
+            ),
+          );
+      }
+    } on Object {
       emit(
         state.copyWith(
           status: RsvpSubmissionStatus.failure,
