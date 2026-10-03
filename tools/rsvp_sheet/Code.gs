@@ -6,7 +6,8 @@
  *     Una fila por invitación. "Cupos" es cuántas personas pueden venir con
  *     ese enlace (1 = solo el invitado, 2 = con acompañante).
  *   Respuestas: Código | Nombre | Correo | Asistencia | Personas | Notas |
- *               Primera respuesta | Última actualización | Veces respondido
+ *               Primera respuesta | Última actualización | Veces respondido |
+ *               Bebe alcohol | Vio aportes
  *
  * Cada invitado recibe su enlace personal: https://edgarsuarez97.github.io/wedding/?i=CODIGO
  * Si alguien entra sin código, puede confirmar solo para sí mismo y su
@@ -26,6 +27,8 @@ const ENCABEZADOS_RESPUESTAS = [
   'Primera respuesta',
   'Última actualización',
   'Veces respondido',
+  'Bebe alcohol',
+  'Vio aportes',
 ];
 
 /** GET ?accion=invitacion&codigo=X  →  { ok, nombre, cupos } */
@@ -40,8 +43,11 @@ function doGet(e) {
 }
 
 /**
+ * POST (texto JSON) con accion "aporte": { codigo?, correo } marca que esa
+ * persona abrió la ventana de aportes, si ya tiene respuesta.
+ *
  * POST (texto JSON): { codigo?, nombre, correo, asistencia, personas, notas,
- * sobrescribir }
+ * alcohol, vioAportes, sobrescribir }
  * Si ya había respondido y sobrescribir no es true, no guarda y devuelve
  * { ok: false, yaRespondio: true, fecha }.
  */
@@ -50,6 +56,7 @@ function doPost(e) {
   lock.waitLock(10000);
   try {
     const d = JSON.parse(e.postData.contents || '{}');
+    if (d.accion === 'aporte') return marcarAporte_(d);
     const nombre = String(d.nombre || '').trim().slice(0, 120);
     const correo = String(d.correo || '').trim().toLowerCase().slice(0, 120);
     if (!nombre || correo.indexOf('@') < 1) {
@@ -64,6 +71,7 @@ function doPost(e) {
       ? Math.max(1, Math.min(cupos, parseInt(d.personas, 10) || 1))
       : 0;
     const notas = String(d.notas || '').trim().slice(0, 500);
+    const alcohol = asiste && d.alcohol === true ? 'Sí' : 'No';
 
     const hoja = hoja_(RESPUESTAS, ENCABEZADOS_RESPUESTAS);
     const fila = buscarRespuesta_(hoja, codigo, correo);
@@ -89,9 +97,12 @@ function doPost(e) {
     if (fila) {
       const veces = Number(hoja.getRange(fila, 9).getValue()) || 1;
       hoja.getRange(fila, 1, 1, 6).setValues([valores]);
-      hoja.getRange(fila, 8, 1, 2).setValues([[ahora, veces + 1]]);
+      const vio = d.vioAportes === true || hoja.getRange(fila, 11).getValue() === 'Sí';
+      hoja.getRange(fila, 8, 1, 4).setValues([[ahora, veces + 1, alcohol, vio ? 'Sí' : 'No']]);
     } else {
-      hoja.appendRow(valores.concat([ahora, ahora, 1]));
+      hoja.appendRow(
+        valores.concat([ahora, ahora, 1, alcohol, d.vioAportes === true ? 'Sí' : 'No']),
+      );
     }
     return json_({ ok: true, actualizado: Boolean(fila), personas: personas });
   } catch (err) {
@@ -99,6 +110,17 @@ function doPost(e) {
   } finally {
     lock.releaseLock();
   }
+}
+
+function marcarAporte_(d) {
+  const inv = d.codigo ? buscarInvitacion_(d.codigo) : null;
+  const codigo = inv ? inv.codigo : '';
+  const correo = String(d.correo || '').trim().toLowerCase();
+  const hoja = hoja_(RESPUESTAS, ENCABEZADOS_RESPUESTAS);
+  const fila = buscarRespuesta_(hoja, codigo, correo);
+  if (!fila) return json_({ ok: false, error: 'sin_respuesta' });
+  hoja.getRange(fila, 11).setValue('Sí');
+  return json_({ ok: true });
 }
 
 function buscarInvitacion_(codigo) {
@@ -137,6 +159,11 @@ function hoja_(nombre, encabezados) {
     hoja.appendRow(encabezados);
     hoja.setFrozenRows(1);
     hoja.getRange(1, 1, 1, encabezados.length).setFontWeight('bold');
+  } else if (hoja.getLastColumn() < encabezados.length) {
+    // Hoja creada con una versión anterior: agrega las columnas nuevas.
+    hoja.getRange(1, 1, 1, encabezados.length)
+      .setValues([encabezados])
+      .setFontWeight('bold');
   }
   return hoja;
 }

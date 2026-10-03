@@ -11,6 +11,12 @@ class _FakeRsvpRepository extends RsvpRepository {
   final Map<String, GuestInvite> invites;
   final Map<String, RsvpSubmission> saved = {};
   final answeredAt = DateTime(2026, 10, 3);
+  final List<String?> giftMarks = [];
+
+  @override
+  Future<void> markGiftsOpened({String? inviteCode, String? email}) async {
+    giftMarks.add(inviteCode ?? email);
+  }
 
   @override
   Future<GuestInvite?> fetchInvite(String code) async => invites[code];
@@ -132,6 +138,61 @@ void main() {
         ),
       ),
       verify: (_) => expect(repository.saved['GE01']?.guestCount, 0),
+    );
+
+    blocTest<RsvpCubit, RsvpState>(
+      'saves the alcohol preference only for guests who attend',
+      build: () => RsvpCubit(repository),
+      act: (cubit) async {
+        await cubit.submit(
+          const RsvpSubmission(
+            name: 'Ana',
+            email: 'ana@example.com',
+            attending: true,
+            guestCount: 1,
+            dietaryNotes: '',
+            drinksAlcohol: true,
+          ),
+        );
+        await cubit.submit(
+          const RsvpSubmission(
+            name: 'Luis',
+            email: 'luis@example.com',
+            attending: false,
+            guestCount: 1,
+            dietaryNotes: '',
+            drinksAlcohol: true,
+          ),
+        );
+      },
+      verify: (_) {
+        expect(repository.saved['ana@example.com']?.drinksAlcohol, isTrue);
+        expect(repository.saved['luis@example.com']?.drinksAlcohol, isFalse);
+      },
+    );
+
+    blocTest<RsvpCubit, RsvpState>(
+      'sends that the gifts window was opened with the answer',
+      build: () => RsvpCubit(repository),
+      act: (cubit) async {
+        await cubit.giftsOpened();
+        await cubit.submit(_submission);
+      },
+      verify: (_) {
+        expect(repository.saved['edgar@example.com']?.openedGifts, isTrue);
+        expect(repository.giftMarks, isEmpty);
+      },
+    );
+
+    blocTest<RsvpCubit, RsvpState>(
+      'marks the gifts window on an answer already saved',
+      build: () => RsvpCubit(repository),
+      seed: () => const RsvpState(invite: _invite),
+      act: (cubit) async {
+        await cubit.submit(_submission);
+        await cubit.giftsOpened();
+      },
+      verify: (_) => expect(repository.giftMarks, ['GE01']),
     );
   });
 }

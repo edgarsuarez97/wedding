@@ -8,6 +8,8 @@ class RsvpSubmission extends Equatable {
     required this.attending,
     required this.guestCount,
     required this.dietaryNotes,
+    this.drinksAlcohol = false,
+    this.openedGifts = false,
     this.inviteCode,
   });
 
@@ -16,6 +18,12 @@ class RsvpSubmission extends Equatable {
   final bool attending;
   final int guestCount;
   final String dietaryNotes;
+
+  /// Quiere bebidas con alcohol en la celebración.
+  final bool drinksAlcohol;
+
+  /// Abrió la ventana de aportes antes de enviar.
+  final bool openedGifts;
 
   /// Código del enlace personal (`?i=CODIGO`), si entró con uno.
   final String? inviteCode;
@@ -27,6 +35,8 @@ class RsvpSubmission extends Equatable {
     attending,
     guestCount,
     dietaryNotes,
+    drinksAlcohol,
+    openedGifts,
     inviteCode,
   ];
 }
