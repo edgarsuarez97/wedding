@@ -199,10 +199,7 @@ class VenueAndFaqSection extends StatelessWidget {
 }
 
 class _FaqTile extends StatefulWidget {
-  const _FaqTile({
-    required this.question,
-    required this.answer,
-  });
+  const _FaqTile({required this.question, required this.answer});
 
   final String question;
   final List<Widget> answer;

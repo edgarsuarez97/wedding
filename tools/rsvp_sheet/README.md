@@ -52,6 +52,15 @@ Usa códigos difíciles de adivinar si no quieres que alguien pruebe otros
 
 ## Respuestas
 
+Columnas: Código, Nombre, Correo, Asistencia, Personas, Notas, Primera
+respuesta, Última actualización, Veces respondido, **Bebe alcohol** y **Vio
+aportes**. "Vio aportes" dice "Sí" si la persona abrió la ventana "Aporta a
+nuestra vida juntos", antes o después de responder.
+
+Si tu hoja se creó con la versión anterior del script, pega el script nuevo,
+crea una **Nueva versión** de la implementación (ver arriba) y ejecuta
+`prepararHoja` otra vez: agrega las dos columnas nuevas sin tocar tus datos.
+
 La pestaña **Respuestas** se llena sola. Si alguien vuelve a responder, el
 sitio le avisa que ya respondió y le pregunta si quiere reemplazar su
 respuesta. Si acepta, se actualiza su misma fila: cambia "Última
@@ -59,3 +68,10 @@ actualización" y aumenta "Veces respondido".
 
 Con código, la respuesta se identifica por el código. Sin código, se
 identifica por el correo.
+
+## Datos para aportes
+
+Los datos de Binance Pay, Venezuela y Estados Unidos van en
+`lib/data/config/gift_config.dart`. Un dato vacío no se muestra. Para el QR de
+Binance Pay, guarda la imagen en `assets/gifts/binance_qr.png` y escribe esa
+ruta en `qrAsset`.

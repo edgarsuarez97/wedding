@@ -4,6 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:wedding_g_and_e/ui/core/garden/garden_card.dart';
 import 'package:wedding_g_and_e/ui/core/garden/wildflower.dart';
 import 'package:wedding_g_and_e/ui/core/theme/app_theme.dart';
+import 'package:wedding_g_and_e/ui/features/home/views/wedding_home_page.dart';
+
+/// Tablero de Pinterest con ideas de vestimenta para la boda.
+const _inspirationUrl = 'https://pin.it/5MBZHzJBQ';
 
 /// Código de vestimenta: colores sugeridos, indicaciones para ellas y ellos,
 /// y colores a evitar.
@@ -248,6 +252,20 @@ class _GuideCard extends StatelessWidget {
                   style: Theme.of(
                     context,
                   ).textTheme.bodyLarge?.copyWith(color: AppTheme.inkSoft),
+                ),
+                const SizedBox(height: 8),
+                TextButton.icon(
+                  onPressed: () => openExternal(_inspirationUrl),
+                  icon: const Icon(Icons.open_in_new_rounded, size: 18),
+                  label: const Text('Ver ideas de looks'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppTheme.lavenderInk,
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    textStyle: AppTheme.eyebrow().copyWith(
+                      fontSize: 12.5,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
                 ),
               ],
             ),

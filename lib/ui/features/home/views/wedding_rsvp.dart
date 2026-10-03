@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:wedding_g_and_e/domain/models/rsvp_submission.dart';
+import 'package:wedding_g_and_e/ui/core/garden/choice_pill.dart';
 import 'package:wedding_g_and_e/ui/core/garden/garden_card.dart';
 import 'package:wedding_g_and_e/ui/core/garden/garden_ornaments.dart';
 import 'package:wedding_g_and_e/ui/core/garden/wildflower.dart';
 import 'package:wedding_g_and_e/ui/core/theme/app_motion.dart';
 import 'package:wedding_g_and_e/ui/core/theme/app_theme.dart';
 import 'package:wedding_g_and_e/ui/features/home/cubit/rsvp_cubit.dart';
+import 'package:wedding_g_and_e/ui/features/home/views/wedding_gifts.dart';
 import 'package:intl/intl.dart';
 
 const _attending = 'Asistiré con gusto';
@@ -28,6 +29,7 @@ class _RsvpSectionState extends State<RsvpSection> {
   final _dietaryController = TextEditingController();
   String _attendance = _attending;
   int _guestCount = 1;
+  bool _drinksAlcohol = false;
   String? _thanks;
   String? _prefilledFor;
 
@@ -69,8 +71,14 @@ class _RsvpSectionState extends State<RsvpSection> {
         attending: _attendance == _attending,
         guestCount: _guestCount,
         dietaryNotes: _dietaryController.text.trim(),
+        drinksAlcohol: _drinksAlcohol,
       ),
     );
+  }
+
+  void _openGifts() {
+    context.read<RsvpCubit>().giftsOpened();
+    showGiftDialog(context);
   }
 
   /// Ya había respondido: le preguntamos antes de reemplazar su respuesta.
@@ -247,6 +255,16 @@ class _RsvpSectionState extends State<RsvpSection> {
                                   setState(() => _guestCount = value),
                             ),
                           ],
+                          if (_attendance == _attending) ...[
+                            const SizedBox(height: 18),
+                            _GardenCheckbox(
+                              value: _drinksAlcohol,
+                              label:
+                                  'Me gustaría brindar con bebidas con alcohol',
+                              onChanged: (value) =>
+                                  setState(() => _drinksAlcohol = value),
+                            ),
+                          ],
                           const SizedBox(height: 20),
                           TextFormField(
                             controller: _dietaryController,
@@ -277,6 +295,31 @@ class _RsvpSectionState extends State<RsvpSection> {
                               style: AppTheme.script(
                                 fontSize: 34,
                                 color: AppTheme.roseInk,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 18),
+                          const Divider(color: AppTheme.cardBorder),
+                          const SizedBox(height: 14),
+                          Center(
+                            child: OutlinedButton.icon(
+                              onPressed: _openGifts,
+                              icon: const Icon(
+                                Icons.volunteer_activism_outlined,
+                                size: 20,
+                              ),
+                              label: const Text('Aporta a nuestra vida juntos'),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: AppTheme.ink,
+                                backgroundColor: Colors.white.withValues(
+                                  alpha: 0.5,
+                                ),
+                                side: const BorderSide(color: AppTheme.stem),
+                                shape: const StadiumBorder(),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 22,
+                                  vertical: 14,
+                                ),
                               ),
                             ),
                           ),
@@ -325,7 +368,7 @@ class _ChoiceGroup<T> extends StatelessWidget {
           runSpacing: 10,
           children: [
             for (final entry in options.entries)
-              _ChoicePill(
+              ChoicePill(
                 label: entry.value,
                 selected: entry.key == value,
                 onTap: () => onChanged(entry.key),
@@ -337,55 +380,74 @@ class _ChoiceGroup<T> extends StatelessWidget {
   }
 }
 
-/// Opción en forma de píldora. Reemplaza a ChoiceChip, que con la altura de
-/// línea de Jost recortaba y desvanecía la parte de abajo del texto.
-class _ChoicePill extends StatelessWidget {
-  const _ChoicePill({
+/// Casilla redondeada en lavanda, con una hojita al marcarla.
+class _GardenCheckbox extends StatelessWidget {
+  const _GardenCheckbox({
+    required this.value,
     required this.label,
-    required this.selected,
-    required this.onTap,
+    required this.onChanged,
   });
 
+  final bool value;
   final String label;
-  final bool selected;
-  final VoidCallback onTap;
+  final ValueChanged<bool> onChanged;
 
   @override
   Widget build(BuildContext context) {
     final duration = AppMotion.reduced(context)
         ? Duration.zero
-        : const Duration(milliseconds: 260);
-    return Semantics(
-      button: true,
-      selected: selected,
-      child: Material(
-        color: Colors.transparent,
-        shape: const StadiumBorder(),
+        : const Duration(milliseconds: 220);
+    return MergeSemantics(
+      child: Semantics(
+        checked: value,
         child: InkWell(
-          onTap: onTap,
-          customBorder: const StadiumBorder(),
-          child: AnimatedContainer(
-            duration: duration,
-            curve: AppMotion.organic,
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-            decoration: ShapeDecoration(
-              color: selected
-                  ? AppTheme.lavender
-                  : Colors.white.withValues(alpha: 0.6),
-              shape: StadiumBorder(
-                side: BorderSide(
-                  color: selected ? AppTheme.lavenderInk : AppTheme.stem,
+          borderRadius: BorderRadius.circular(12),
+          onTap: () => onChanged(!value),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
+            child: Row(
+              children: [
+                AnimatedContainer(
+                  duration: duration,
+                  curve: AppMotion.organic,
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    color: value
+                        ? AppTheme.lavender
+                        : Colors.white.withValues(alpha: 0.7),
+                    borderRadius: BorderRadius.circular(7),
+                    border: Border.all(
+                      color: value ? AppTheme.lavenderInk : AppTheme.stem,
+                    ),
+                  ),
+                  child: AnimatedScale(
+                    scale: value ? 1 : 0,
+                    duration: duration,
+                    curve: AppMotion.sproutCurve,
+                    child: const Icon(
+                      Icons.check_rounded,
+                      size: 17,
+                      color: AppTheme.ink,
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            child: Text(
-              label,
-              style: GoogleFonts.jost(
-                color: AppTheme.ink,
-                fontSize: 15,
-                height: 1.25,
-                fontWeight: selected ? FontWeight.w500 : FontWeight.w400,
-              ),
+                const SizedBox(width: 12),
+                Flexible(
+                  child: Text(
+                    label,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyLarge?.copyWith(color: AppTheme.ink),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                const Icon(
+                  Icons.wine_bar_outlined,
+                  size: 20,
+                  color: AppTheme.lavenderInk,
+                ),
+              ],
             ),
           ),
         ),

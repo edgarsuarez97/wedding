@@ -61,6 +61,26 @@ class RsvpCubit extends Cubit<RsvpState> {
 
   final RsvpRepository _repository;
   RsvpSubmission? _pending;
+  RsvpSubmission? _saved;
+  bool _openedGifts = false;
+
+  /// El invitado abrió la ventana de aportes. Se guarda con su respuesta, o
+  /// se marca enseguida si ya había respondido.
+  Future<void> giftsOpened() async {
+    _openedGifts = true;
+    final saved = _saved;
+    if (saved == null) {
+      return;
+    }
+    try {
+      await _repository.markGiftsOpened(
+        inviteCode: saved.inviteCode,
+        email: saved.email,
+      );
+    } on Object {
+      // Es solo un registro; no interrumpe al invitado.
+    }
+  }
 
   /// Carga la invitación del enlace `?i=CODIGO`. Un código inválido o sin
   /// conexión deja el formulario general.
@@ -108,6 +128,8 @@ class RsvpCubit extends Cubit<RsvpState> {
       attending: submission.attending,
       guestCount: guests,
       dietaryNotes: submission.dietaryNotes,
+      drinksAlcohol: submission.attending && submission.drinksAlcohol,
+      openedGifts: _openedGifts,
       inviteCode: state.invite?.code,
     );
     _pending = request;
@@ -117,6 +139,7 @@ class RsvpCubit extends Cubit<RsvpState> {
       switch (result) {
         case RsvpSaved(:final updated):
           _pending = null;
+          _saved = request;
           emit(
             state.copyWith(
               status: RsvpSubmissionStatus.success,

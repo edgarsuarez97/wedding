@@ -56,6 +56,8 @@ class RsvpRepository {
         'asistencia': submission.attending ? 'si' : 'no',
         'personas': submission.guestCount,
         'notas': submission.dietaryNotes,
+        'alcohol': submission.drinksAlcohol,
+        'vioAportes': submission.openedGifts,
         'sobrescribir': overwrite,
       }),
     );
@@ -70,6 +72,22 @@ class RsvpRepository {
       );
     }
     throw StateError('RSVP rechazado: ${data['error']}');
+  }
+
+  /// Marca en la hoja que quien ya respondió abrió la ventana de aportes.
+  Future<void> markGiftsOpened({String? inviteCode, String? email}) async {
+    if (!_configured) {
+      return;
+    }
+    await _client.post(
+      Uri.parse(_endpoint),
+      headers: {'Content-Type': 'text/plain;charset=utf-8'},
+      body: jsonEncode({
+        'accion': 'aporte',
+        'codigo': inviteCode,
+        'correo': email,
+      }),
+    );
   }
 
   Map<String, Object?> _decode(http.Response response) {
