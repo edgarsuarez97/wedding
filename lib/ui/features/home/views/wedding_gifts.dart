@@ -126,6 +126,16 @@ class _GiftDialogState extends State<_GiftDialog> {
                             ],
                             for (final (label, value) in details)
                               _CopyRow(label: label, value: value),
+                            if (details.length > 1) ...[
+                              const SizedBox(height: 10),
+                              _CopyAllButton(
+                                text: [
+                                  option.label,
+                                  for (final (label, value) in details)
+                                    '$label: $value',
+                                ].join('\n'),
+                              ),
+                            ],
                           ],
                         )
                       : Text(
@@ -210,6 +220,50 @@ class _CopyRowState extends State<_CopyRow> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Copia todos los datos de la opción de una vez.
+class _CopyAllButton extends StatefulWidget {
+  const _CopyAllButton({required this.text});
+
+  final String text;
+
+  @override
+  State<_CopyAllButton> createState() => _CopyAllButtonState();
+}
+
+class _CopyAllButtonState extends State<_CopyAllButton> {
+  bool _copied = false;
+
+  Future<void> _copy() async {
+    await Clipboard.setData(ClipboardData(text: widget.text));
+    if (!mounted) {
+      return;
+    }
+    setState(() => _copied = true);
+    await Future<void>.delayed(const Duration(milliseconds: 1800));
+    if (mounted) {
+      setState(() => _copied = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton.icon(
+      onPressed: _copy,
+      icon: Icon(
+        _copied ? Icons.check_rounded : Icons.copy_all_rounded,
+        size: 18,
+      ),
+      label: Text(_copied ? '¡Datos copiados!' : 'Copiar todos los datos'),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: _copied ? AppTheme.olive : AppTheme.ink,
+        side: const BorderSide(color: AppTheme.stem),
+        shape: const StadiumBorder(),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
       ),
     );
   }
