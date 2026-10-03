@@ -72,6 +72,7 @@ flutter:
     - assets/illustrations/paper_texture.jpg
     - assets/illustrations/vinyl-label.jpg
     - assets/illustrations/wildflowers/
+    - assets/monogram/
 
   # To add assets to your application, add an assets section, like this:
   # assets:
