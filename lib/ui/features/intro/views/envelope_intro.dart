@@ -8,25 +8,31 @@ import 'monogram.dart';
 
 /// Colores de la invitación (papel, cera y jardín).
 class _IntroPalette {
-  static const backgroundTop = Color(0xFFF7F4EC);
-  static const backgroundBottom = Color(0xFFDDE8D6);
-  static const envelope = Color(0xFFF3ECDF);
-  static const envelopeShade = Color(0xFFE6DCCB);
-  static const envelopeEdge = Color(0xFFD5C8B2);
-  static const liner = Color(0xFFC9D8C0);
-  static const linerLeaf = Color(0xFF9DB592);
+  // Paleta "Garden Party": azul pervinca, verde oliva, rosa, durazno,
+  // amarillo mantequilla, lavanda y verde menta.
+  static const periwinkle = Color(0xFF9DB9E6);
+  static const skyBlue = Color(0xFFBCD8F2);
+  static const olive = Color(0xFFA9B77E);
+  static const pink = Color(0xFFF5B3C8);
+  static const peach = Color(0xFFFFC98C);
+  static const butter = Color(0xFFFFEFA3);
+  static const lavender = Color(0xFFC9BFE6);
+  static const mint = Color(0xFFB8D8A8);
+
+  static const backgroundTop = Color(0xFFFBF8F0);
+  static const backgroundBottom = Color(0xFFE4EEF7);
+  static const envelope = Color(0xFFF6F0E4);
+  static const envelopeShade = Color(0xFFE9E1D2);
+  static const envelopeEdge = Color(0xFFD8CCB8);
+  static const liner = Color(0xFFDCD5F0);
+  static const linerLeaf = olive;
   static const card = Color(0xFFFFFDF8);
-  static const sage = Color(0xFF5E7458);
-  static const wax = Color(0xFF7E9A78);
-  static const waxDark = Color(0xFF5F7A5A);
-  static const ink = Color(0xFF3E4A3C);
-  static const petals = [
-    Color(0xFFF2C9D4),
-    Color(0xFFF8E1E7),
-    Color(0xFFE4B8C8),
-    Color(0xFFB9CDAE),
-    Color(0xFFFFF4D9),
-  ];
+  static const sage = Color(0xFF6F7F4A);
+  static const wax = Color(0xFF9AA86C);
+  static const waxDark = Color(0xFF6F7F4A);
+  static const ink = Color(0xFF3F4636);
+  static const stem = Color(0xFF8E9E62);
+  static const petals = [periwinkle, pink, peach, butter, lavender, mint];
 }
 
 /// Pantalla de bienvenida: un sobre sellado con el monograma.
@@ -760,70 +766,186 @@ void _paintLeafPattern(Canvas canvas, Size size, Color color) {
   }
 }
 
-/// Ramas de jardín en las esquinas del fondo.
+/// Ramos de flores silvestres en las esquinas del fondo: lavanda,
+/// campanillas, lirios y velo de novia.
 class _GardenCornersPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final scale = math.min(size.width, size.height) / 420;
-    _branch(canvas, Offset.zero, scale, 1, 1);
-    _branch(canvas, Offset(size.width, size.height), scale, -1, -1);
-    _branch(canvas, Offset(size.width, 0), scale * 0.7, -1, 1);
-    _branch(canvas, Offset(0, size.height), scale * 0.7, 1, -1);
+    _bouquet(canvas, Offset.zero, scale, 1, 1);
+    _bouquet(canvas, Offset(size.width, size.height), scale, -1, -1);
+    _bouquet(canvas, Offset(size.width, 0), scale * 0.7, -1, 1);
+    _bouquet(canvas, Offset(0, size.height), scale * 0.7, 1, -1);
   }
 
-  void _branch(Canvas canvas, Offset corner, double s, double sx, double sy) {
+  void _bouquet(Canvas canvas, Offset corner, double s, double sx, double sy) {
     canvas.save();
     canvas.translate(corner.dx, corner.dy);
     canvas.scale(sx * s, sy * s);
 
-    final stem = Paint()
-      ..color = const Color(0xFF8EA883)
+    // Hierbas finas de fondo.
+    final grass = Paint()
+      ..color = _IntroPalette.mint
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.4
+      ..strokeWidth = 1.6
       ..strokeCap = StrokeCap.round;
-    final main = Path()
-      ..moveTo(-10, 40)
-      ..quadraticBezierTo(70, 50, 150, 10);
-    final second = Path()
-      ..moveTo(30, -10)
-      ..quadraticBezierTo(40, 70, 10, 150);
-    canvas.drawPath(main, stem);
-    canvas.drawPath(second, stem);
-
-    final leafPaint = Paint()..color = const Color(0xFFA9C09C);
-    for (final metric in [
-      ...main.computeMetrics(),
-      ...second.computeMetrics(),
-    ]) {
-      for (var d = 18.0; d < metric.length; d += 20) {
-        final tangent = metric.getTangentForOffset(d)!;
-        for (final side in [-1.0, 1.0]) {
-          canvas.save();
-          canvas.translate(tangent.position.dx, tangent.position.dy);
-          canvas.rotate(-tangent.angle + side * 0.8);
-          canvas.drawOval(const Rect.fromLTWH(0, -5, 22, 10), leafPaint);
-          canvas.restore();
-        }
-      }
+    for (var i = 0; i < 6; i++) {
+      final a = 0.15 + i * 0.22;
+      canvas.drawPath(
+        Path()
+          ..moveTo(-6, -6)
+          ..quadraticBezierTo(
+            math.cos(a) * 70,
+            math.sin(a) * 40,
+            math.cos(a) * 150,
+            math.sin(a) * 150,
+          ),
+        grass,
+      );
     }
 
-    // Flores sueltas.
-    for (final (center, color) in [
-      (const Offset(150, 12), const Color(0xFFE4B8C8)),
-      (const Offset(12, 150), const Color(0xFFF2C9D4)),
-      (const Offset(70, 70), const Color(0xFFF8E1E7)),
-    ]) {
-      for (var i = 0; i < 5; i++) {
-        final a = i * 2 * math.pi / 5;
-        canvas.drawCircle(
-          center + Offset(math.cos(a), math.sin(a)) * 8,
-          7.5,
-          Paint()..color = color,
+    _lavender(canvas, const Offset(-6, -6), 0.32, 170, _IntroPalette.lavender);
+    _lavender(canvas, const Offset(-6, -6), 1.2, 150, _IntroPalette.periwinkle);
+    _bluebells(canvas, const Offset(-6, -6), 0.72, 165);
+    _lily(canvas, const Offset(92, 58), 20, 0.4, _IntroPalette.peach);
+    _lily(canvas, const Offset(46, 112), 16, 1.1, _IntroPalette.pink);
+    _lily(canvas, const Offset(132, 118), 12, 0.9, _IntroPalette.butter);
+    _babysBreath(canvas, const Offset(150, 34));
+    _babysBreath(canvas, const Offset(22, 160));
+    canvas.restore();
+  }
+
+  Paint _stemPaint() => Paint()
+    ..color = _IntroPalette.stem
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 2
+    ..strokeCap = StrokeCap.round;
+
+  /// Espiga de lavanda: tallo recto con capullos ovalados hacia la punta.
+  void _lavender(
+    Canvas canvas,
+    Offset base,
+    double angle,
+    double length,
+    Color color,
+  ) {
+    final dir = Offset(math.cos(angle), math.sin(angle));
+    final tip = base + dir * length;
+    canvas.drawLine(base, tip, _stemPaint());
+    final bud = Paint()..color = color;
+    for (var i = 0; i < 9; i++) {
+      final t = 0.55 + i * 0.05;
+      final p = base + dir * length * t;
+      for (final side in [-1.0, 1.0]) {
+        canvas.save();
+        canvas.translate(p.dx, p.dy);
+        canvas.rotate(angle + side * 0.5);
+        canvas.drawOval(
+          Rect.fromCenter(
+            center: Offset(3, side * 3),
+            width: 9 - i * 0.4,
+            height: 5,
+          ),
+          bud,
         );
+        canvas.restore();
       }
-      canvas.drawCircle(center, 4.5, Paint()..color = const Color(0xFFF1D9A6));
+    }
+  }
+
+  /// Rama arqueada de campanillas colgantes.
+  void _bluebells(Canvas canvas, Offset base, double angle, double length) {
+    final dir = Offset(math.cos(angle), math.sin(angle));
+    final normal = Offset(-dir.dy, dir.dx);
+    final control = base + dir * length * 0.55 - normal * 30;
+    final tip = base + dir * length;
+    final path = Path()
+      ..moveTo(base.dx, base.dy)
+      ..quadraticBezierTo(control.dx, control.dy, tip.dx, tip.dy);
+    canvas.drawPath(path, _stemPaint());
+
+    final bell = Paint()..color = _IntroPalette.periwinkle;
+    final inner = Paint()..color = _IntroPalette.skyBlue;
+    final metric = path.computeMetrics().first;
+    for (var d = metric.length * 0.45; d < metric.length; d += 22) {
+      final tangent = metric.getTangentForOffset(d)!;
+      final p = tangent.position;
+      final hang = p + const Offset(4, 12);
+      canvas.drawLine(p, hang, _stemPaint()..strokeWidth = 1.2);
+      canvas.save();
+      canvas.translate(hang.dx, hang.dy);
+      canvas.rotate(-0.35);
+      final shape = Path()
+        ..moveTo(-5, 0)
+        ..quadraticBezierTo(-7, 9, -9, 14)
+        ..quadraticBezierTo(-4, 11, -2, 15)
+        ..quadraticBezierTo(0, 11, 2, 15)
+        ..quadraticBezierTo(4, 11, 9, 14)
+        ..quadraticBezierTo(7, 9, 5, 0)
+        ..close();
+      canvas.drawPath(shape, bell);
+      canvas.drawOval(const Rect.fromLTWH(-3, 1, 6, 5), inner);
+      canvas.restore();
+    }
+  }
+
+  /// Lirio visto de frente: seis pétalos en punta con estambres.
+  void _lily(
+    Canvas canvas,
+    Offset center,
+    double radius,
+    double rotation,
+    Color color,
+  ) {
+    final petal = Paint()..color = color;
+    final vein = Paint()
+      ..color = Color.lerp(color, Colors.white, 0.45)!
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+    canvas.rotate(rotation);
+    for (var i = 0; i < 6; i++) {
+      canvas.save();
+      canvas.rotate(i * math.pi / 3 + (i.isOdd ? 0.12 : 0));
+      final r = i.isOdd ? radius * 0.86 : radius;
+      final shape = Path()
+        ..moveTo(0, 0)
+        ..quadraticBezierTo(r * 0.45, -r * 0.32, r, 0)
+        ..quadraticBezierTo(r * 0.45, r * 0.32, 0, 0)
+        ..close();
+      canvas.drawPath(shape, petal);
+      canvas.drawLine(Offset(r * 0.15, 0), Offset(r * 0.8, 0), vein);
+      canvas.restore();
+    }
+    final stamen = Paint()
+      ..color = _IntroPalette.stem
+      ..strokeWidth = 1
+      ..strokeCap = StrokeCap.round;
+    final pollen = Paint()..color = const Color(0xFFE0A85C);
+    for (var i = 0; i < 6; i++) {
+      final a = i * math.pi / 3 + math.pi / 6;
+      final end = Offset(math.cos(a), math.sin(a)) * radius * 0.5;
+      canvas.drawLine(Offset.zero, end, stamen);
+      canvas.drawCircle(end, 1.6, pollen);
     }
     canvas.restore();
+  }
+
+  /// Velo de novia: ramita con puntitos claros.
+  void _babysBreath(Canvas canvas, Offset center) {
+    final stem = _stemPaint()..strokeWidth = 1;
+    final dot = Paint()..color = Colors.white.withValues(alpha: 0.95);
+    final dotEdge = Paint()..color = _IntroPalette.butter;
+    final random = math.Random(center.dx.toInt() * 31 + center.dy.toInt());
+    for (var i = 0; i < 9; i++) {
+      final p =
+          center +
+          Offset(random.nextDouble() * 26 - 13, random.nextDouble() * 26 - 13);
+      canvas.drawLine(center, p, stem);
+      canvas.drawCircle(p, 3.4, dotEdge);
+      canvas.drawCircle(p, 2.6, dot);
+    }
   }
 
   @override

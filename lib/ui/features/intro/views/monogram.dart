@@ -12,7 +12,7 @@ class Monogram extends StatelessWidget {
   const Monogram({
     super.key,
     required this.size,
-    this.color = const Color(0xFF5E7458),
+    this.color = const Color(0xFF6F7F4A),
     this.showWreath = true,
   });
 
@@ -101,21 +101,21 @@ class _WreathPainter extends CustomPainter {
       }
     }
 
-    // Pequeña flor donde se unen las ramas.
+    // Pequeño lirio lavanda donde se unen las ramas.
     final bloom = center + Offset(0, radius);
-    final petal = Paint()..color = const Color(0xFFE4B8C8);
-    for (var i = 0; i < 5; i++) {
-      final a = i * 2 * math.pi / 5 - math.pi / 2;
-      canvas.drawCircle(
-        bloom + Offset(math.cos(a), math.sin(a)) * size.width * 0.022,
-        size.width * 0.02,
-        petal,
-      );
+    final petal = Paint()..color = const Color(0xFFC9BFE6);
+    final petalLength = size.width * 0.05;
+    for (var i = 0; i < 6; i++) {
+      canvas.save();
+      canvas.translate(bloom.dx, bloom.dy);
+      canvas.rotate(i * math.pi / 3);
+      canvas.drawPath(_leafPath(petalLength), petal);
+      canvas.restore();
     }
     canvas.drawCircle(
       bloom,
-      size.width * 0.014,
-      Paint()..color = const Color(0xFFF1D9A6),
+      size.width * 0.01,
+      Paint()..color = const Color(0xFFFFEFA3),
     );
   }
 
