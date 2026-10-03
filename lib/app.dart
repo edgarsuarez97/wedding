@@ -29,7 +29,9 @@ class WeddingApp extends StatelessWidget {
                   ..load(),
           ),
           BlocProvider(
-            create: (context) => RsvpCubit(context.read<RsvpRepository>()),
+            create: (context) =>
+                RsvpCubit(context.read<RsvpRepository>())
+                  ..loadInvite(Uri.base.queryParameters['i']),
           ),
           BlocProvider(create: (_) => InvitationCubit()),
         ],
