@@ -18,28 +18,26 @@ class GiftOption {
 const giftOptions = [
   GiftOption(
     label: 'Binance Pay',
-    // Ejemplo: 'assets/gifts/binance_qr.png'
-    qrAsset: null,
-    details: [('Pay ID', ''), ('Usuario', '')],
+    qrAsset: 'assets/gifts/binance_qr.png',
+    details: [('Usuario', 'EdgarAle97')],
   ),
   GiftOption(
     label: 'Venezuela',
     details: [
-      ('Banco', ''),
-      ('Titular', ''),
-      ('Cédula', ''),
-      ('Número de cuenta', ''),
-      ('Pago móvil (teléfono)', ''),
+      ('Pago móvil', 'Banco Banesco (0134)'),
+      ('Teléfono', '04244649772'),
+      ('Cédula', 'V26162720'),
     ],
   ),
   GiftOption(
     label: 'Estados Unidos',
     details: [
-      ('Zelle', ''),
-      ('Banco', ''),
-      ('Titular', ''),
-      ('Número de cuenta', ''),
-      ('Routing (ABA)', ''),
+      ('Beneficiario', 'EDGAR ALEJANDRO SUAREZ MANFREDI'),
+      ('Número de cuenta', '56110034668'),
+      ('Routing (ACH)', '021502189'),
+      ('SWIFT', 'FILCPR22'),
+      ('Banco', 'FACEBANK International'),
+      ('Correo', 'edgarsuarez97@gmail.com'),
     ],
   ),
 ];
