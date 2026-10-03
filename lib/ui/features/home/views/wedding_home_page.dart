@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -351,20 +352,21 @@ class _Footer extends StatelessWidget {
       child: Column(
         children: [
           Container(
-            width: 70,
-            height: 70,
+            width: 96,
+            height: 96,
             alignment: Alignment.center,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(color: AppTheme.lavenderInk),
             ),
-            child: Text(
-              'G&E',
-              style: AppTheme.display(
-                fontSize: 24,
-                color: AppTheme.lavenderInk,
-                fontStyle: FontStyle.italic,
+            child: SvgPicture.asset(
+              'assets/monogram/monogram.svg',
+              width: 70,
+              colorFilter: const ColorFilter.mode(
+                AppTheme.lavenderInk,
+                BlendMode.srcIn,
               ),
+              semanticsLabel: 'Monograma G&E',
             ),
           ),
           const SizedBox(height: 10),

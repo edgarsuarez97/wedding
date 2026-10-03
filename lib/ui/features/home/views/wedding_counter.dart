@@ -140,7 +140,9 @@ class _HeroSectionState extends State<HeroSection>
             ),
           ),
           // Las hojas se desvanecen solas al llegar al borde inferior.
-          const Positioned.fill(child: FallingLeaves(fadeFrom: 0.84)),
+          Positioned.fill(
+            child: FallingLeaves(count: width < 600 ? 14 : 24, fadeFrom: 0.84),
+          ),
           Positioned(
             top: 0,
             right: 0,
