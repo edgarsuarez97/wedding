@@ -9,6 +9,8 @@ import 'package:wedding_g_and_e/ui/features/home/views/components/scroll.dart';
 import 'package:wedding_g_and_e/ui/features/home/views/components/section_container.dart';
 import 'package:wedding_g_and_e/ui/core/garden/garden_divider.dart';
 import 'package:wedding_g_and_e/ui/core/garden/garden_ornaments.dart';
+import 'package:wedding_g_and_e/ui/core/garden/smooth_wheel_scroll.dart';
+import 'package:wedding_g_and_e/ui/core/garden/viewport.dart';
 import 'package:wedding_g_and_e/ui/features/home/views/wedding_counter.dart';
 import 'package:wedding_g_and_e/ui/features/home/views/wedding_dress_code.dart';
 import 'package:wedding_g_and_e/ui/features/home/views/wedding_gallery.dart';
@@ -224,84 +226,106 @@ class _WeddingExperienceState extends State<WeddingExperience> {
       backgroundColor: AppTheme.paper,
       body: Stack(
         children: [
+          // El papel queda fijo detrás y se pinta una sola vez, en vez de
+          // repintar miles de pixeles de textura con cada animación.
+          const Positioned.fill(
+            child: RepaintBoundary(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: AppTheme.paper,
+                  image: DecorationImage(
+                    image: AssetImage('assets/illustrations/paper_texture.jpg'),
+                    fit: BoxFit.none,
+                    repeat: ImageRepeat.repeat,
+                    opacity: 0.5,
+                  ),
+                ),
+              ),
+            ),
+          ),
           LayoutBuilder(
             builder: (context, constraints) {
               final isDesktop = constraints.maxWidth >= 920;
 
               return SingleChildScrollView(
-                child: DecoratedBox(
-                  decoration: const BoxDecoration(
-                    color: AppTheme.paper,
-                    image: DecorationImage(
-                      image: AssetImage(
-                        'assets/illustrations/paper_texture.jpg',
-                      ),
-                      fit: BoxFit.none,
-                      repeat: ImageRepeat.repeat,
-                      opacity: 0.5,
-                    ),
-                  ),
+                child: SmoothWheelScroll(
                   child: Column(
                     children: [
-                      HeroSection(
-                        weddingDate: widget.content.weddingDate,
-                        heroImageUrl: widget.content.heroImageUrl,
-                        coupleNames: widget.content.coupleNames,
-                        isMusicPlaying: _isHeroMusicPlaying,
-                        isMusicBusy: _isPreparingAudio,
-                        onToggleMusic: _toggleHeroMusic,
+                      OnScreen(
+                        child: HeroSection(
+                          weddingDate: widget.content.weddingDate,
+                          heroImageUrl: widget.content.heroImageUrl,
+                          coupleNames: widget.content.coupleNames,
+                          isMusicPlaying: _isHeroMusicPlaying,
+                          isMusicBusy: _isPreparingAudio,
+                          onToggleMusic: _toggleHeroMusic,
+                        ),
                       ),
-                      HeroEventDetailsSection(
-                        weddingDate: widget.content.weddingDate,
+                      OnScreen(
+                        child: HeroEventDetailsSection(
+                          weddingDate: widget.content.weddingDate,
+                        ),
                       ),
                       const GardenDivider(),
 
                       // Historia e itinerario
-                      SectionContainer(
-                        background: Colors.transparent,
-                        child: _pair(
-                          isDesktop,
-                          StorySection(story: widget.content.story),
-                          ScheduleSection(schedule: widget.content.schedule),
+                      OnScreen(
+                        child: SectionContainer(
+                          background: Colors.transparent,
+                          child: _pair(
+                            isDesktop,
+                            StorySection(story: widget.content.story),
+                            ScheduleSection(schedule: widget.content.schedule),
+                          ),
                         ),
                       ),
                       const GardenDivider(),
 
                       // Código de vestimenta
-                      SectionContainer(
-                        key: _dressCodeKey,
-                        background: Colors.transparent,
-                        child: const ScrollReveal(child: DressCodeSection()),
+                      OnScreen(
+                        child: SectionContainer(
+                          key: _dressCodeKey,
+                          background: Colors.transparent,
+                          child: const ScrollReveal(child: DressCodeSection()),
+                        ),
                       ),
                       const GardenDivider(),
 
                       // Fotos y video
-                      SectionContainer(
-                        background: Colors.transparent,
-                        child: _pair(
-                          isDesktop,
-                          GallerySection(
-                            images: widget.content.galleryImageUrls,
+                      OnScreen(
+                        child: SectionContainer(
+                          background: Colors.transparent,
+                          child: _pair(
+                            isDesktop,
+                            GallerySection(
+                              images: widget.content.galleryImageUrls,
+                            ),
+                            VideoSection(videoUrl: widget.content.videoUrl),
                           ),
-                          VideoSection(videoUrl: widget.content.videoUrl),
                         ),
                       ),
                       const GardenDivider(),
 
                       // Confirmación de asistencia
-                      const Padding(
-                        padding: EdgeInsets.only(top: 40),
-                        child: SectionContainer(
-                          background: Colors.transparent,
-                          child: ScrollReveal(child: RsvpSection()),
+                      const OnScreen(
+                        child: Padding(
+                          padding: EdgeInsets.only(top: 40),
+                          child: SectionContainer(
+                            background: Colors.transparent,
+                            child: ScrollReveal(child: RsvpSection()),
+                          ),
                         ),
                       ),
                       const GardenDivider(),
 
                       // Agradecimiento, lugar y preguntas
-                      SectionContainer(
-                        background: Colors.transparent,
-                        child: VenueAndFaqSection(dressCodeKey: _dressCodeKey),
+                      OnScreen(
+                        child: SectionContainer(
+                          background: Colors.transparent,
+                          child: VenueAndFaqSection(
+                            dressCodeKey: _dressCodeKey,
+                          ),
+                        ),
                       ),
                       const _Footer(),
                     ],

@@ -42,7 +42,9 @@ jobs:
             BASE_HREF="/"
           fi
 
-          flutter build web --release --base-href "$BASE_HREF"
+          # WebAssembly (skwasm) renderiza más fluido; los navegadores sin
+          # soporte caen solos a CanvasKit.
+          flutter build web --wasm --release --base-href "$BASE_HREF"
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
