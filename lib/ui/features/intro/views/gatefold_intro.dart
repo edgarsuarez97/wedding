@@ -20,7 +20,7 @@ class GatefoldIntro extends StatefulWidget {
     required this.onOpened,
     this.dateLabel = '28 · 08 · 2027',
     this.weekday = 'Sábado',
-    this.place = 'Tribus Privé · Valencia',
+    this.place = 'Tribus Privé · Mañongo, Valencia',
   });
 
   final VoidCallback onOpened;
@@ -467,7 +467,7 @@ class _RevealCard extends StatelessWidget {
                         ),
                       ),
                       SizedBox(height: 10 * unit),
-                      line(1, _script('Edgar', 54 * unit)),
+                      line(1, _script('Gabriela', 54 * unit)),
                       line(
                         1,
                         Transform.translate(
@@ -483,7 +483,7 @@ class _RevealCard extends StatelessWidget {
                         2,
                         Transform.translate(
                           offset: Offset(0, -24 * unit),
-                          child: _script('Gabriela', 54 * unit),
+                          child: _script('Edgar', 54 * unit),
                         ),
                       ),
                       line(
