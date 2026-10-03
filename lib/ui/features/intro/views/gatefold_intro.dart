@@ -3,9 +3,9 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import 'monogram.dart';
 import 'printed_bouquet.dart';
 import 'garden_colors.dart';
 
@@ -405,7 +405,14 @@ class _WaxSeal extends StatelessWidget {
         return CustomPaint(
           painter: _WaxPainter(),
           child: Center(
-            child: Monogram(size: size * 0.74, color: const Color(0xFFFBF7EA)),
+            child: SvgPicture.asset(
+              'assets/monogram/monogram.svg',
+              width: size * 0.7,
+              colorFilter: const ColorFilter.mode(
+                Color(0xFFFFFFFF),
+                BlendMode.srcIn,
+              ),
+            ),
           ),
         );
       },
