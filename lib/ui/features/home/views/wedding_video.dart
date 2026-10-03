@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
+import 'package:wedding_g_and_e/ui/core/garden/garden_card.dart';
+import 'package:wedding_g_and_e/ui/core/theme/app_theme.dart';
 
 class VideoSection extends StatefulWidget {
   const VideoSection({super.key, required this.videoUrl});
@@ -70,17 +72,31 @@ class _VideoSectionState extends State<VideoSection> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Un momento en movimiento', style: textTheme.headlineMedium),
+        const GardenHeading(
+          eyebrow: 'Video',
+          title: 'Un momento ',
+          accent: 'en movimiento',
+        ),
         const SizedBox(height: 12),
         Text(
-          'Un breve adelanto de la celebración. Puedes reemplazarlo por tu propio video preboda cuando quieras.',
-          style: textTheme.bodyLarge?.copyWith(color: const Color(0xFF5E646A)),
+          'Un breve adelanto de la celebración.',
+          style: textTheme.bodyLarge?.copyWith(color: AppTheme.inkSoft),
         ),
         const SizedBox(height: 16),
         ClipRRect(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(18),
           child: Container(
-            color: Colors.black,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFFC9D3AE),
+                  Color(0xFF8D9C62),
+                  Color(0xFF5E6B3E),
+                ],
+              ),
+            ),
             height: 320,
             width: double.infinity,
             child: _ready && _controller != null
@@ -114,10 +130,21 @@ class _VideoSectionState extends State<VideoSection> {
                 : Center(
                     child: _isInitializing
                         ? const CircularProgressIndicator()
-                        : FilledButton.icon(
+                        : IconButton(
+                            tooltip: 'Reproducir video',
                             onPressed: _onPlayPressed,
-                            icon: const Icon(Icons.play_circle_outline),
-                            label: const Text('Reproducir video'),
+                            iconSize: 32,
+                            style: IconButton.styleFrom(
+                              fixedSize: const Size(74, 74),
+                              backgroundColor: Colors.white.withValues(
+                                alpha: 0.2,
+                              ),
+                              side: const BorderSide(color: Colors.white70),
+                            ),
+                            icon: const Icon(
+                              Icons.play_arrow_rounded,
+                              color: Colors.white,
+                            ),
                           ),
                   ),
           ),
@@ -126,4 +153,3 @@ class _VideoSectionState extends State<VideoSection> {
     );
   }
 }
-

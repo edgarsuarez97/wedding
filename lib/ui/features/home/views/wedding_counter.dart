@@ -4,7 +4,15 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:wedding_g_and_e/ui/core/garden/falling_leaves.dart';
+import 'package:wedding_g_and_e/ui/core/garden/wildflower.dart';
+import 'package:wedding_g_and_e/ui/core/theme/app_motion.dart';
+import 'package:wedding_g_and_e/ui/core/theme/app_theme.dart';
 import 'package:wedding_g_and_e/ui/features/home/views/wedding_home_page.dart';
+
+const _venueLine = 'Tribus Privé · Mañongo, Valencia';
+const _mapsUrl =
+    'https://www.google.com/maps/place/IP+Tribus+Prive/@10.231332,-67.9980372,17z/data=!4m14!1m7!3m6!1s0x8e8067427044ab73:0xb249651b3d80e67a!2sIP+Tribus+Prive!8m2!3d10.231332!4d-67.9954623!16s%2Fg%2F11tp7qkc_0!3m5!1s0x8e8067427044ab73:0xb249651b3d80e67a!8m2!3d10.231332!4d-67.9954623!16s%2Fg%2F11tp7qkc_0?entry=ttu&g_ep=EgoyMDI2MDYwMy4xIKXMDSoASAFQAw%3D%3D';
 
 class HeroSection extends StatefulWidget {
   const HeroSection({
@@ -32,28 +40,22 @@ class HeroSection extends StatefulWidget {
 
 class _HeroSectionState extends State<HeroSection>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _entranceController;
-  late final Animation<double> _contentAnimation;
-  late final Animation<double> _buttonAnimation;
+  late final AnimationController _entranceController = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1600),
+  );
 
   bool _didConfigureMotionPreference = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _entranceController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 920),
-    );
-    _contentAnimation = CurvedAnimation(
-      parent: _entranceController,
-      curve: const Interval(0.08, 0.78, curve: Curves.easeOutCubic),
-    );
-    _buttonAnimation = CurvedAnimation(
-      parent: _entranceController,
-      curve: const Interval(0.24, 1, curve: Curves.easeOutCubic),
-    );
-  }
+  Animation<double> _step(double begin, double end) => CurvedAnimation(
+    parent: _entranceController,
+    curve: Interval(begin, end, curve: AppMotion.organic),
+  );
+
+  late final Animation<double> _namesAnimation = _step(0.1, 0.7);
+  late final Animation<double> _dateAnimation = _step(0.3, 0.85);
+  late final Animation<double> _placeAnimation = _step(0.42, 1);
+  late final Animation<double> _buttonAnimation = _step(0.2, 0.8);
 
   @override
   void didChangeDependencies() {
@@ -62,21 +64,16 @@ class _HeroSectionState extends State<HeroSection>
       return;
     }
     _didConfigureMotionPreference = true;
-    final prefersReducedMotion =
-        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
-    if (prefersReducedMotion) {
+    if (AppMotion.reduced(context)) {
       _entranceController.value = 1;
-    } else {
-      if (widget.entranceDelay > Duration.zero) {
-        Future<void>.delayed(widget.entranceDelay, () {
-          if (!mounted) {
-            return;
-          }
+    } else if (widget.entranceDelay > Duration.zero) {
+      Future<void>.delayed(widget.entranceDelay, () {
+        if (mounted) {
           _entranceController.forward();
-        });
-      } else {
-        _entranceController.forward();
-      }
+        }
+      });
+    } else {
+      _entranceController.forward();
     }
   }
 
@@ -88,6 +85,11 @@ class _HeroSectionState extends State<HeroSection>
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    final namesSize = (width * 0.11).clamp(54.0, 104.0);
+    final names = widget.coupleNames.split('&').map((s) => s.trim()).toList();
+    final dateText = DateFormat('dd · MM · yyyy').format(widget.weddingDate);
+
     return SizedBox(
       height: 680,
       width: double.infinity,
@@ -122,29 +124,14 @@ class _HeroSectionState extends State<HeroSection>
                     begin: Alignment.bottomCenter,
                     end: Alignment.topCenter,
                     colors: [
-                      Colors.black.withValues(alpha: 0.58),
-                      Colors.black.withValues(alpha: 0.18),
+                      const Color(0xFF1E2028).withValues(alpha: 0.55),
+                      const Color(0xFF1E2028).withValues(alpha: 0.14),
                     ],
                   ),
                 ),
               ),
             ),
-            Positioned.fill(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Color(0x00F9F6F1),
-                      Color(0x1AF9F6F1),
-                      Color(0x52F9F6F1),
-                    ],
-                    stops: [0.52, 0.8, 1],
-                  ),
-                ),
-              ),
-            ),
+            const Positioned.fill(child: FallingLeaves()),
             Positioned(
               top: 0,
               right: 0,
@@ -163,41 +150,90 @@ class _HeroSectionState extends State<HeroSection>
               ),
             ),
             Positioned.fill(
-              child: _FadeSlideIn(
-                animation: _contentAnimation,
-                beginOffsetY: 30,
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 860),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(24, 40, 24, 90),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _FadeSlideIn(
+                      animation: _namesAnimation,
+                      beginOffsetY: 22,
+                      child: Text.rich(
+                        TextSpan(
+                          children: [
+                            TextSpan(text: names.first),
+                            if (names.length > 1) ...[
+                              TextSpan(
+                                text: ' & ',
+                                style: TextStyle(
+                                  color: const Color(0xFFFFC3D3),
+                                  fontSize: namesSize * 0.66,
+                                ),
+                              ),
+                              TextSpan(text: names.last),
+                            ],
+                          ],
+                        ),
+                        textAlign: TextAlign.center,
+                        style:
+                            AppTheme.script(
+                              fontSize: namesSize,
+                              color: Colors.white,
+                            ).copyWith(
+                              shadows: const [
+                                Shadow(
+                                  color: Color(0x40000000),
+                                  blurRadius: 18,
+                                ),
+                              ],
+                            ),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    _FadeSlideIn(
+                      animation: _dateAnimation,
+                      beginOffsetY: 18,
                       child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
+                            width: 140,
+                            height: 1,
+                            decoration: const BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  Color(0x00FFEB9F),
+                                  AppTheme.butter,
+                                  Color(0x00FFEB9F),
+                                ],
+                              ),
                             ),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.86),
-                              borderRadius: BorderRadius.circular(99),
-                            ),
-                            child: const Text('Save The Date'),
-                          ),
-                          const SizedBox(height: 20),
-                          Text(
-                            widget.coupleNames,
-                            textAlign: TextAlign.center,
-                            style: Theme.of(context).textTheme.displayLarge
-                                ?.copyWith(color: Colors.white, fontSize: 68),
                           ),
                           const SizedBox(height: 14),
-                          _HeroMonogram(coupleNames: widget.coupleNames),
+                          Text(
+                            dateText,
+                            style: AppTheme.display(
+                              fontSize: width < 500 ? 18 : 22,
+                              color: Colors.white,
+                            ).copyWith(letterSpacing: 7),
+                          ),
                         ],
                       ),
                     ),
-                  ),
+                    const SizedBox(height: 12),
+                    _FadeSlideIn(
+                      animation: _placeAnimation,
+                      beginOffsetY: 16,
+                      child: Text(
+                        _venueLine.toUpperCase(),
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.jost(
+                          fontSize: 12.5,
+                          letterSpacing: 2.5,
+                          color: Colors.white.withValues(alpha: 0.88),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -236,6 +272,7 @@ class _FadeSlideIn extends StatelessWidget {
   }
 }
 
+/// Segunda sección: "Save the date", cuenta regresiva y accesos rápidos.
 class HeroEventDetailsSection extends StatelessWidget {
   const HeroEventDetailsSection({super.key, required this.weddingDate});
 
@@ -243,73 +280,33 @@ class HeroEventDetailsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dateText = DateFormat('dd.MM.yyyy').format(weddingDate);
     final buttonStyle = OutlinedButton.styleFrom(
-      foregroundColor: const Color(0xFF151515),
-      side: const BorderSide(color: Color(0xFF151515), width: 1.2),
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
-      textStyle: const TextStyle(fontWeight: FontWeight.w600),
+      foregroundColor: AppTheme.ink,
+      backgroundColor: Colors.white.withValues(alpha: 0.5),
+      side: const BorderSide(color: AppTheme.ink),
+      shape: const StadiumBorder(),
+      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
+      textStyle: GoogleFonts.jost(fontSize: 15, letterSpacing: 0.5),
     );
+    final width = MediaQuery.sizeOf(context).width;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 46, 20, 18),
+      padding: const EdgeInsets.fromLTRB(20, 40, 20, 24),
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 980),
           child: Column(
             children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Expanded(
-                    child: Container(
-                      height: 1.2,
-                      margin: const EdgeInsets.only(top: 12, right: 14),
-                      decoration: const BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                          colors: [
-                            Color(0x00201E1A),
-                            Color(0xFF201E1A),
-                            Color(0x00201E1A),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  Text(
-                    dateText,
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.playfairDisplay(
-                      fontSize: 36,
-                      fontWeight: FontWeight.w500,
-                      letterSpacing: 0.8,
-                      color: const Color(0xFF1F1C18),
-                    ),
-                  ),
-                  Expanded(
-                    child: Container(
-                      height: 1.2,
-                      margin: const EdgeInsets.only(top: 12, left: 14),
-                      decoration: const BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                          colors: [
-                            Color(0x00201E1A),
-                            Color(0xFF201E1A),
-                            Color(0x00201E1A),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+              Text(
+                'Save the date',
+                textAlign: TextAlign.center,
+                style: AppTheme.script(
+                  fontSize: (width * 0.07).clamp(40.0, 56.0),
+                ),
               ),
-              const SizedBox(height: 40),
-              _CountdownPill(targetDate: weddingDate),
-              const SizedBox(height: 26),
+              const SizedBox(height: 30),
+              _Countdown(targetDate: weddingDate),
+              const SizedBox(height: 30),
               Wrap(
                 spacing: 12,
                 runSpacing: 12,
@@ -318,15 +315,13 @@ class HeroEventDetailsSection extends StatelessWidget {
                   OutlinedButton.icon(
                     style: buttonStyle,
                     onPressed: () => launchGoogleCalendar(weddingDate),
-                    icon: const Icon(Icons.calendar_month),
+                    icon: const Icon(Icons.calendar_month_outlined, size: 18),
                     label: const Text('Agregar a Google Calendar'),
                   ),
                   OutlinedButton.icon(
                     style: buttonStyle,
-                    onPressed: () => openExternal(
-                      'https://www.google.com/maps/place/IP+Tribus+Prive/@10.231332,-67.9980372,17z/data=!4m14!1m7!3m6!1s0x8e8067427044ab73:0xb249651b3d80e67a!2sIP+Tribus+Prive!8m2!3d10.231332!4d-67.9954623!16s%2Fg%2F11tp7qkc_0!3m5!1s0x8e8067427044ab73:0xb249651b3d80e67a!8m2!3d10.231332!4d-67.9954623!16s%2Fg%2F11tp7qkc_0?entry=ttu&g_ep=EgoyMDI2MDYwMy4xIKXMDSoASAFQAw%3D%3D',
-                    ),
-                    icon: const Icon(Icons.location_on_outlined),
+                    onPressed: () => openExternal(_mapsUrl),
+                    icon: const Icon(Icons.location_on_outlined, size: 18),
                     label: const Text('Ver lugar'),
                   ),
                 ],
@@ -339,60 +334,16 @@ class HeroEventDetailsSection extends StatelessWidget {
   }
 }
 
-class _HeroMonogram extends StatelessWidget {
-  const _HeroMonogram({required this.coupleNames});
-
-  final String coupleNames;
-
-  @override
-  Widget build(BuildContext context) {
-    final initials = _extractInitials(coupleNames);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.16),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.62)),
-      ),
-      child: Text(
-        initials,
-        style: GoogleFonts.playfairDisplay(
-          fontSize: 22,
-          fontWeight: FontWeight.w600,
-          letterSpacing: 1.2,
-          color: Colors.white,
-        ),
-      ),
-    );
-  }
-
-  String _extractInitials(String value) {
-    final letters = value
-        .split(RegExp(r'\s+|&|y|and'))
-        .where((part) => part.trim().isNotEmpty)
-        .map((part) => part.trim()[0].toUpperCase())
-        .toList();
-
-    if (letters.isEmpty) {
-      return 'E • G';
-    }
-    if (letters.length == 1) {
-      return '${letters.first} • ${letters.first}';
-    }
-    return '${letters.first} • ${letters.last}';
-  }
-}
-
-class _CountdownPill extends StatefulWidget {
-  const _CountdownPill({required this.targetDate});
+class _Countdown extends StatefulWidget {
+  const _Countdown({required this.targetDate});
 
   final DateTime targetDate;
 
   @override
-  State<_CountdownPill> createState() => _CountdownPillState();
+  State<_Countdown> createState() => _CountdownState();
 }
 
-class _CountdownPillState extends State<_CountdownPill> {
+class _CountdownState extends State<_Countdown> {
   late Duration _remaining;
   Timer? _timer;
 
@@ -418,132 +369,224 @@ class _CountdownPillState extends State<_CountdownPill> {
 
   @override
   Widget build(BuildContext context) {
-    final days = _remaining.inDays.clamp(0, 9999);
-    final hours = (_remaining.inHours % 24).clamp(0, 23);
-    final minutes = (_remaining.inMinutes % 60).clamp(0, 59);
-    final seconds = (_remaining.inSeconds % 60).clamp(0, 59);
-    final isCompact = MediaQuery.sizeOf(context).width < 430;
-    return FittedBox(
-      fit: BoxFit.scaleDown,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
+    final remaining = _remaining.isNegative ? Duration.zero : _remaining;
+    final cellSize = (MediaQuery.sizeOf(context).width * 0.18).clamp(
+      74.0,
+      104.0,
+    );
+    String two(int v) => v.toString().padLeft(2, '0');
+    final cells = [
+      ('${remaining.inDays}', 'días'),
+      (two(remaining.inHours % 24), 'horas'),
+      (two(remaining.inMinutes % 60), 'minutos'),
+      (two(remaining.inSeconds % 60), 'segundos'),
+    ];
+
+    return Semantics(
+      label:
+          'Faltan ${remaining.inDays} días, ${remaining.inHours % 24} horas y ${remaining.inMinutes % 60} minutos',
+      excludeSemantics: true,
+      child: Wrap(
+        alignment: WrapAlignment.center,
+        spacing: 16,
+        runSpacing: 16,
         children: [
-          _CountdownMetric(
-            value: '$days',
-            label: 'dias',
-            compact: isCompact,
-            boxWidth: isCompact ? 78 : 110,
-          ),
-          SizedBox(width: isCompact ? 8 : 12),
-          _CountdownMetric(
-            value: hours.toString().padLeft(2, '0'),
-            label: 'horas',
-            compact: isCompact,
-            boxWidth: isCompact ? 64 : 86,
-          ),
-          SizedBox(width: isCompact ? 8 : 12),
-          _CountdownMetric(
-            value: minutes.toString().padLeft(2, '0'),
-            label: 'minutos',
-            compact: isCompact,
-            boxWidth: isCompact ? 64 : 86,
-          ),
-          SizedBox(width: isCompact ? 8 : 12),
-          _CountdownMetric(
-            value: seconds.toString().padLeft(2, '0'),
-            label: 'segundos',
-            compact: isCompact,
-            boxWidth: isCompact ? 64 : 86,
-          ),
+          for (final (i, (value, label)) in cells.indexed)
+            _WreathCell(
+              value: value,
+              label: label,
+              size: cellSize,
+              withBloom: i == cells.length - 1,
+            ),
         ],
       ),
     );
   }
 }
 
-class _CountdownMetric extends StatelessWidget {
-  const _CountdownMetric({
+/// Un número de la cuenta regresiva dentro de una pequeña corona de hojas.
+class _WreathCell extends StatelessWidget {
+  const _WreathCell({
     required this.value,
     required this.label,
-    this.compact = false,
-    required this.boxWidth,
+    required this.size,
+    this.withBloom = false,
   });
 
   final String value;
   final String label;
-  final bool compact;
-  final double boxWidth;
+  final double size;
+  final bool withBloom;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: boxWidth,
-          height: compact ? 64 : 84,
-          padding: EdgeInsets.symmetric(horizontal: compact ? 10 : 14),
-          decoration: BoxDecoration(
-            color: const Color(0xFFEFEAE1).withValues(alpha: 0.92),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFFCCC1B2)),
+    return SizedBox(
+      width: size,
+      height: size,
+      child: Stack(
+        clipBehavior: Clip.none,
+        alignment: Alignment.center,
+        children: [
+          Positioned.fill(child: CustomPaint(painter: _WreathPainter())),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _TickingNumber(value: value, fontSize: size * 0.38),
+              const SizedBox(height: 2),
+              Text(
+                label.toUpperCase(),
+                style: GoogleFonts.jost(
+                  fontSize: 10.5,
+                  letterSpacing: 2,
+                  color: AppTheme.inkSoft,
+                ),
+              ),
+            ],
           ),
-          child: Center(
-            child: _AnimatedCountdownNumber(value: value, compact: compact),
-          ),
-        ),
-        SizedBox(height: compact ? 6 : 8),
-        Text(
-          label,
-          style: GoogleFonts.lora(
-            fontSize: compact ? 12 : 13,
-            fontWeight: FontWeight.w500,
-            letterSpacing: 1.1,
-            color: const Color(0xFF1A1A1A),
-          ),
-        ),
-      ],
+          if (withBloom)
+            Positioned(top: -size * 0.1, child: const _BeatingBloom(size: 28)),
+        ],
+      ),
     );
   }
 }
 
-class _AnimatedCountdownNumber extends StatelessWidget {
-  const _AnimatedCountdownNumber({required this.value, required this.compact});
+class _WreathPainter extends CustomPainter {
+  static final Path _leaf = Path()
+    ..moveTo(0, 0)
+    ..cubicTo(8, -9, 22, -10, 32, 0)
+    ..cubicTo(22, 10, 8, 9, 0, 0)
+    ..close();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final r = size.width / 2;
+    final center = Offset(r, r);
+    canvas
+      ..drawCircle(
+        center,
+        r * 0.92,
+        Paint()..color = Colors.white.withValues(alpha: 0.6),
+      )
+      ..drawCircle(
+        center,
+        r * 0.92,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..color = AppTheme.mint,
+      );
+    final fill = Paint()..color = AppTheme.mint;
+    final stroke = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.6
+      ..color = AppTheme.stem;
+    final scale = size.width / 100 * 0.45;
+    for (final (x, y, deg) in const [
+      (14.0, 74.0, -60.0),
+      (86.0, 74.0, -120.0),
+    ]) {
+      canvas
+        ..save()
+        ..translate(x * size.width / 100, y * size.height / 100)
+        ..rotate(deg * math.pi / 180)
+        ..scale(scale)
+        ..translate(-16, 0)
+        ..drawPath(_leaf, fill)
+        ..drawPath(_leaf, stroke)
+        ..restore();
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _TickingNumber extends StatelessWidget {
+  const _TickingNumber({required this.value, required this.fontSize});
 
   final String value;
-  final bool compact;
+  final double fontSize;
 
   @override
   Widget build(BuildContext context) {
     return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 360),
-      switchInCurve: Curves.easeOutCubic,
-      switchOutCurve: Curves.easeInCubic,
+      duration: AppMotion.reduced(context)
+          ? Duration.zero
+          : AppMotion.countdownTick,
+      switchInCurve: AppMotion.organic,
+      switchOutCurve: Curves.easeIn,
       transitionBuilder: (child, animation) {
-        final offsetAnimation = Tween<Offset>(
-          begin: const Offset(0, 0.25),
-          end: Offset.zero,
-        ).animate(animation);
         return FadeTransition(
           opacity: animation,
-          child: SlideTransition(position: offsetAnimation, child: child),
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0, -0.35),
+              end: Offset.zero,
+            ).animate(animation),
+            child: child,
+          ),
         );
       },
       child: Text(
         value,
         key: ValueKey<String>(value),
-        textAlign: TextAlign.center,
         maxLines: 1,
-        softWrap: false,
-        overflow: TextOverflow.visible,
-        style: GoogleFonts.lora(
-          fontSize: compact ? 30 : 44,
-          height: 1,
-          fontWeight: FontWeight.w600,
-          letterSpacing: 0.3,
-          color: const Color(0xFF101010),
-        ),
+        style: AppTheme.display(fontSize: fontSize, fontWeight: FontWeight.w600)
+            .copyWith(
+              height: 1,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
       ),
+    );
+  }
+}
+
+/// Nomeolvides que late una vez por segundo junto a los segundos.
+class _BeatingBloom extends StatefulWidget {
+  const _BeatingBloom({required this.size});
+
+  final double size;
+
+  @override
+  State<_BeatingBloom> createState() => _BeatingBloomState();
+}
+
+class _BeatingBloomState extends State<_BeatingBloom>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(seconds: 1),
+  );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (AppMotion.reduced(context)) {
+      _controller.stop();
+    } else if (!_controller.isAnimating) {
+      _controller.repeat();
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      child: WildflowerIcon(Wildflower.forgetMeNot, size: widget.size),
+      builder: (context, child) {
+        final t = _controller.value;
+        final beat = t < 0.15 ? t / 0.15 : (1 - (t - 0.15) / 0.85);
+        return Transform.scale(
+          scale: 1 + 0.25 * beat.clamp(0, 1),
+          child: child,
+        );
+      },
     );
   }
 }
