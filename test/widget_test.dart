@@ -1,21 +1,35 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:wedding_g_and_e/app.dart';
+import 'package:wedding_g_and_e/ui/features/intro/views/envelope_intro.dart';
 
 void main() {
-  testWidgets('Carga directa del sitio sin pantalla de apertura', (
+  testWidgets('Muestra el sobre sellado al entrar al sitio', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(const WeddingApp());
 
-    expect(find.text('Abrir invitación'), findsNothing);
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.byType(EnvelopeIntro), findsOneWidget);
+    expect(find.text('Toca el sello para abrir'), findsOneWidget);
+    expect(find.text('Ver invitación'), findsNothing);
+  });
+
+  testWidgets('Abrir el sello revela la tarjeta y luego el sitio', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(const WeddingApp());
+
+    await tester.tap(find.byKey(const ValueKey('envelope-seal')));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('Ver invitación'), findsOneWidget);
+
+    await tester.tap(find.text('Ver invitación'));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+
+    expect(find.byType(EnvelopeIntro), findsNothing);
   });
 }
