@@ -188,19 +188,48 @@ class _GatefoldIntroState extends State<GatefoldIntro>
         // Con movimiento reducido, las puertas se desvanecen en vez de moverse.
         final fade = reduce ? 1 - _open.value : 1.0;
 
-        Widget sealHalf({required bool left}) => Positioned(
-          left: half - sealSize / 2 + (left ? -offset : offset),
-          top: sealTop,
-          width: sealSize,
-          height: sealSize,
-          child: Transform.scale(
-            scale: sealScale,
-            child: ClipRect(
-              clipper: _HalfClipper(left: left),
-              child: const _WaxSeal(),
+        // La sombra va aparte, sin escalar ni recortar: escalar una sombra
+        // difuminada en cada cuadro la hace titilar.
+        final shadowPad = sealSize * 0.25;
+        Widget sealShadow({bool? left}) {
+          final shift = left == null ? 0.0 : (left ? -offset : offset);
+          final shadow = CustomPaint(painter: _SealShadowPainter(sealSize));
+          return Positioned(
+            left: half - sealSize / 2 - shadowPad + shift,
+            top: sealTop - shadowPad,
+            width: sealSize + shadowPad * 2,
+            height: sealSize + shadowPad * 2,
+            child: IgnorePointer(
+              child: left == null
+                  ? shadow
+                  : ClipRect(
+                      clipper: _HalfClipper(left: left),
+                      child: shadow,
+                    ),
             ),
-          ),
-        );
+          );
+        }
+
+        Widget seal({bool? left}) {
+          final shift = left == null ? 0.0 : (left ? -offset : offset);
+          return Positioned(
+            left: half - sealSize / 2 + shift,
+            top: sealTop,
+            width: sealSize,
+            height: sealSize,
+            child: Transform.scale(
+              scale: sealScale,
+              // Cerrado se dibuja entero; partirlo en dos mitades recortadas
+              // mientras late deja una costura que parpadea.
+              child: left == null
+                  ? const _WaxSeal()
+                  : ClipRect(
+                      clipper: _HalfClipper(left: left),
+                      child: const _WaxSeal(),
+                    ),
+            ),
+          );
+        }
 
         return Opacity(
           opacity: fade,
@@ -231,8 +260,15 @@ class _GatefoldIntroState extends State<GatefoldIntro>
                   shadowOnLeft: true,
                 ),
               ),
-              sealHalf(left: true),
-              sealHalf(left: false),
+              if (!_opening) ...[
+                sealShadow(),
+                seal(),
+              ] else ...[
+                sealShadow(left: true),
+                sealShadow(left: false),
+                seal(left: true),
+                seal(left: false),
+              ],
               // Área del sello para lectores de pantalla y pruebas.
               Positioned(
                 left: half - sealSize / 2,
@@ -420,22 +456,47 @@ class _WaxSeal extends StatelessWidget {
   }
 }
 
+/// Contorno irregular de la cera.
+Path _sealBlob(Offset center, double r) {
+  final blob = Path();
+  for (var i = 0; i <= 72; i++) {
+    final a = i / 72 * 2 * math.pi;
+    final wobble = 1 + 0.03 * math.sin(a * 11) + 0.022 * math.cos(a * 4 + 1);
+    final p = center + Offset(math.cos(a), math.sin(a)) * r * 0.97 * wobble;
+    i == 0 ? blob.moveTo(p.dx, p.dy) : blob.lineTo(p.dx, p.dy);
+  }
+  return blob..close();
+}
+
+/// Sombra suave del sello sobre el papel.
+class _SealShadowPainter extends CustomPainter {
+  _SealShadowPainter(this.sealSize);
+
+  final double sealSize;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final r = sealSize / 2;
+    canvas.drawPath(
+      _sealBlob(size.center(Offset(0, r * 0.07)), r),
+      Paint()
+        ..color = const Color(0x47000000)
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, r * 0.08),
+    );
+  }
+
+  @override
+  bool shouldRepaint(_SealShadowPainter oldDelegate) =>
+      oldDelegate.sealSize != sealSize;
+}
+
 class _WaxPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final center = size.center(Offset.zero);
     final r = size.width / 2;
+    final blob = _sealBlob(center, r);
 
-    final blob = Path();
-    for (var i = 0; i <= 72; i++) {
-      final a = i / 72 * 2 * math.pi;
-      final wobble = 1 + 0.03 * math.sin(a * 11) + 0.022 * math.cos(a * 4 + 1);
-      final p = center + Offset(math.cos(a), math.sin(a)) * r * 0.97 * wobble;
-      i == 0 ? blob.moveTo(p.dx, p.dy) : blob.lineTo(p.dx, p.dy);
-    }
-    blob.close();
-
-    canvas.drawShadow(blob, Colors.black, 8, false);
     canvas.drawPath(
       blob,
       Paint()
