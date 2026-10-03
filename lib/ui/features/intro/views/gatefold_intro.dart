@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -27,6 +28,13 @@ class _GatefoldIntroState extends State<GatefoldIntro>
   late final AnimationController _idle;
   late final AnimationController _open;
   bool _opening = false;
+
+  // El estampado se pinta una sola vez a imagen: en la web no hay caché de
+  // rasterizado y repintar cientos de degradados en cada cuadro de la
+  // apertura la vuelve entrecortada.
+  ui.Image? _print;
+  Size? _printSize;
+  double? _printRatio;
 
   bool get _reduceMotion => MediaQuery.of(context).disableAnimations;
 
@@ -62,7 +70,33 @@ class _GatefoldIntroState extends State<GatefoldIntro>
   void dispose() {
     _idle.dispose();
     _open.dispose();
+    _print?.dispose();
     super.dispose();
+  }
+
+  void _ensurePrint(Size size, double ratio) {
+    if (size.isEmpty || (size == _printSize && ratio == _printRatio)) {
+      return;
+    }
+    _printSize = size;
+    _printRatio = ratio;
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder)..scale(ratio);
+    paintPrintedBouquet(canvas, size);
+    final picture = recorder.endRecording();
+    picture
+        .toImage((size.width * ratio).ceil(), (size.height * ratio).ceil())
+        .then((image) {
+          picture.dispose();
+          if (!mounted || size != _printSize || ratio != _printRatio) {
+            image.dispose();
+            return;
+          }
+          setState(() {
+            _print?.dispose();
+            _print = image;
+          });
+        });
   }
 
   void _openDoors() {
@@ -118,6 +152,8 @@ class _GatefoldIntroState extends State<GatefoldIntro>
   }
 
   Widget _buildScene(Size size) {
+    final ratio = MediaQuery.devicePixelRatioOf(context);
+    _ensurePrint(size, ratio);
     final sealSize = math.min(
       180.0,
       math.min(size.width * 0.36, size.height * 0.22),
@@ -177,6 +213,7 @@ class _GatefoldIntroState extends State<GatefoldIntro>
                 bottom: 0,
                 width: half,
                 child: _Door(
+                  image: _print,
                   fullSize: size,
                   originX: half,
                   shadowOnLeft: false,
@@ -187,7 +224,12 @@ class _GatefoldIntroState extends State<GatefoldIntro>
                 top: 0,
                 bottom: 0,
                 width: half,
-                child: _Door(fullSize: size, originX: 0, shadowOnLeft: true),
+                child: _Door(
+                  image: _print,
+                  fullSize: size,
+                  originX: 0,
+                  shadowOnLeft: true,
+                ),
               ),
               sealHalf(left: true),
               sealHalf(left: false),
@@ -265,11 +307,13 @@ class _HalfClipper extends CustomClipper<Rect> {
 /// lean como un solo papel cortado al medio.
 class _Door extends StatelessWidget {
   const _Door({
+    required this.image,
     required this.fullSize,
     required this.originX,
     required this.shadowOnLeft,
   });
 
+  final ui.Image? image;
   final Size fullSize;
   final double originX;
   final bool shadowOnLeft;
@@ -295,9 +339,14 @@ class _Door extends StatelessWidget {
                 top: 0,
                 width: fullSize.width,
                 height: fullSize.height,
-                child: const RepaintBoundary(
-                  child: CustomPaint(painter: _PrintPainter()),
-                ),
+                child: image == null
+                    ? const ColoredBox(color: PrintColors.paper)
+                    : RawImage(
+                        image: image,
+                        width: fullSize.width,
+                        height: fullSize.height,
+                        fit: BoxFit.fill,
+                      ),
               ),
               // Grano de papel encima de la tinta para que se sienta impreso.
               Positioned(
@@ -342,16 +391,6 @@ class _Door extends StatelessWidget {
       ),
     );
   }
-}
-
-class _PrintPainter extends CustomPainter {
-  const _PrintPainter();
-
-  @override
-  void paint(Canvas canvas, Size size) => paintPrintedBouquet(canvas, size);
-
-  @override
-  bool shouldRepaint(_PrintPainter oldDelegate) => false;
 }
 
 /// Sello de cera verde oliva con el monograma G&E.
