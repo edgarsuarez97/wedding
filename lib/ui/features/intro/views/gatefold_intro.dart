@@ -358,10 +358,7 @@ class _Door extends StatelessWidget {
                           ? Alignment.centerLeft
                           : Alignment.centerRight,
                       stops: const [0, 0.06],
-                      colors: [
-                        const Color(0x12000000),
-                        Colors.transparent,
-                      ],
+                      colors: [const Color(0x12000000), Colors.transparent],
                     ),
                   ),
                 ),
@@ -451,75 +448,79 @@ class _RevealCard extends StatelessWidget {
               ),
               Positioned.fromRect(
                 rect: oval.deflate(ovalWidth * 0.12),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    line(
-                      0,
-                      Text(
-                        'NUESTRA BODA',
-                        style: GoogleFonts.cormorantGaramond(
-                          fontSize: 14 * unit,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 3,
-                          color: GardenColors.ink,
+                // En pantallas bajas el texto se encoge en vez de desbordar.
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      line(
+                        0,
+                        Text(
+                          'NUESTRA BODA',
+                          style: GoogleFonts.cormorantGaramond(
+                            fontSize: 14 * unit,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 3,
+                            color: GardenColors.ink,
+                          ),
                         ),
                       ),
-                    ),
-                    SizedBox(height: 10 * unit),
-                    line(1, _script('Edgar', 54 * unit)),
-                    line(
-                      1,
-                      Transform.translate(
-                        offset: Offset(28 * unit, -14 * unit),
-                        child: _script(
-                          '&',
-                          34 * unit,
-                          color: GardenColors.lavender,
+                      SizedBox(height: 10 * unit),
+                      line(1, _script('Edgar', 54 * unit)),
+                      line(
+                        1,
+                        Transform.translate(
+                          offset: Offset(28 * unit, -14 * unit),
+                          child: _script(
+                            '&',
+                            34 * unit,
+                            color: GardenColors.lavender,
+                          ),
                         ),
                       ),
-                    ),
-                    line(
-                      2,
-                      Transform.translate(
-                        offset: Offset(0, -24 * unit),
-                        child: _script('Gabriela', 54 * unit),
+                      line(
+                        2,
+                        Transform.translate(
+                          offset: Offset(0, -24 * unit),
+                          child: _script('Gabriela', 54 * unit),
+                        ),
                       ),
-                    ),
-                    line(
-                      3,
-                      Column(
-                        children: [
-                          Text(
-                            weekday.toUpperCase(),
-                            style: GoogleFonts.cormorantGaramond(
-                              fontSize: 12 * unit,
-                              letterSpacing: 2.5,
-                              color: GardenColors.ink,
+                      line(
+                        3,
+                        Column(
+                          children: [
+                            Text(
+                              weekday.toUpperCase(),
+                              style: GoogleFonts.cormorantGaramond(
+                                fontSize: 12 * unit,
+                                letterSpacing: 2.5,
+                                color: GardenColors.ink,
+                              ),
                             ),
-                          ),
-                          Text(
-                            dateLabel,
-                            style: GoogleFonts.cormorantGaramond(
-                              fontSize: 22 * unit,
-                              fontWeight: FontWeight.w700,
-                              color: GardenColors.ink,
+                            Text(
+                              dateLabel,
+                              style: GoogleFonts.cormorantGaramond(
+                                fontSize: 22 * unit,
+                                fontWeight: FontWeight.w700,
+                                color: GardenColors.ink,
+                              ),
                             ),
-                          ),
-                          SizedBox(height: 6 * unit),
-                          Text(
-                            place,
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.cormorantGaramond(
-                              fontSize: 14 * unit,
-                              fontStyle: FontStyle.italic,
-                              color: GardenColors.oliveDeep,
+                            SizedBox(height: 6 * unit),
+                            Text(
+                              place,
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.cormorantGaramond(
+                                fontSize: 14 * unit,
+                                fontStyle: FontStyle.italic,
+                                color: GardenColors.oliveDeep,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ],
