@@ -11,10 +11,9 @@ void main() {
 
     expect(find.byType(GatefoldIntro), findsOneWidget);
     expect(find.text('Toca el sello para abrir'), findsOneWidget);
-    expect(find.text('Ver invitación'), findsNothing);
   });
 
-  testWidgets('Abrir el sello revela la tarjeta y luego avisa al sitio', (
+  testWidgets('Un toque en el sello abre las puertas y muestra el sitio', (
     WidgetTester tester,
   ) async {
     var opened = false;
@@ -24,16 +23,10 @@ void main() {
 
     await tester.tap(find.byKey(const ValueKey('envelope-seal')));
     await tester.pump();
-    await tester.pump(const Duration(seconds: 3));
-    await tester.pump(const Duration(milliseconds: 600));
-
-    expect(find.text('Ver invitación'), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 900));
     expect(opened, isFalse);
 
-    await tester.tap(find.text('Ver invitación'));
-    await tester.pump();
     await tester.pump(const Duration(seconds: 1));
-
     expect(opened, isTrue);
   });
 }

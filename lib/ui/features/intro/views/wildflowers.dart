@@ -4,7 +4,7 @@ import 'dart:ui';
 /// Paleta "Garden Party" de Edgar y tonos de apoyo.
 abstract final class GardenColors {
   static const bellflower = Color(0xFF9DBCE6);
-  static const bellflowerDeep = Color(0xFF6F8FD0);
+  static const bellflowerDeep = Color(0xFF8FB0E0);
   static const sky = Color(0xFFBCD7F2);
   static const olive = Color(0xFFB6C489);
   static const oliveDeep = Color(0xFF7D8C52);
@@ -14,8 +14,8 @@ abstract final class GardenColors {
   static const butter = Color(0xFFFFEB9F);
   static const lavender = Color(0xFFC9C1E3);
   static const lilac = Color(0xFFDCC2F1);
-  static const lavenderDeep = Color(0xFFA698DA);
-  static const pinkDeep = Color(0xFFF08BAE);
+  static const lavenderDeep = Color(0xFFB8AEE0);
+  static const pinkDeep = Color(0xFFF7B3C8);
   static const mint = Color(0xFFB7D7AA);
   static const paper = Color(0xFFFFFDF8);
   static const ink = Color(0xFF34392F);
@@ -362,53 +362,6 @@ void paintWildflowerPrint(Canvas canvas, Size size, {int seed = 2808}) {
           );
         }
       }
-    }
-  }
-}
-
-/// Corona ovalada de flores silvestres, abierta arriba, para enmarcar los
-/// nombres.
-void paintWildflowerWreath(Canvas canvas, Rect oval, {int seed = 2027}) {
-  final random = math.Random(seed);
-  final center = oval.center;
-  final rx = oval.width / 2;
-  final ry = oval.height / 2;
-  final s = (oval.shortestSide / 250).clamp(0.9, 1.8);
-
-  Offset pointAt(double a) =>
-      center + Offset(math.cos(a) * rx, math.sin(a) * ry);
-
-  // Tallo fino que recorre el óvalo, salvo un hueco arriba.
-  const gap = 0.55;
-  final stem = Path();
-  const steps = 80;
-  for (var i = 0; i <= steps; i++) {
-    final a = -math.pi / 2 + gap + (2 * math.pi - 2 * gap) * i / steps;
-    final p = pointAt(a);
-    i == 0 ? stem.moveTo(p.dx, p.dy) : stem.lineTo(p.dx, p.dy);
-  }
-  canvas.drawPath(stem, Wildflowers._stroke(GardenColors.olive, 1.4 * s));
-
-  for (final foliage in [true, false]) {
-    final count = foliage ? 44 : 34;
-    for (var i = 0; i < count; i++) {
-      final t = (i + random.nextDouble() * 0.6) / count;
-      final a = -math.pi / 2 + gap + (2 * math.pi - 2 * gap) * t;
-      // Más tupido abajo, más ligero hacia arriba.
-      final weight = 0.65 + 0.35 * math.sin(a);
-      final p =
-          pointAt(a) +
-          Offset(random.nextDouble() - 0.5, random.nextDouble() - 0.5) * 18 * s;
-      final tangent = a + math.pi / 2;
-      final outward = a + (random.nextDouble() - 0.5) * 1.4;
-      Wildflowers.any(
-        canvas,
-        random,
-        p,
-        s * (0.5 + 0.5 * weight),
-        foliage ? tangent + (random.nextBool() ? 0 : math.pi) : outward,
-        foliage: foliage,
-      );
     }
   }
 }

@@ -8,42 +8,24 @@ import 'monogram.dart';
 import 'wildflowers.dart';
 
 /// Portada de la invitación: dos puertas con estampado de flores silvestres
-/// unidas por un sello de cera con el monograma.
+/// unidas al centro por un sello de cera verde oliva con el monograma.
 ///
-/// Al tocar el sello, las puertas se deslizan hacia los lados (el sello viaja
-/// con la puerta izquierda) y aparece la tarjeta con la corona floral, los
-/// nombres y la fecha. "Ver invitación" despide la escena y llama a
-/// [onOpened].
+/// Un solo toque basta: el sello se parte a la mitad, las puertas se deslizan
+/// hacia los lados y debajo queda el sitio. Al terminar llama a [onOpened].
 class GatefoldIntro extends StatefulWidget {
-  const GatefoldIntro({
-    super.key,
-    required this.onOpened,
-    this.dateLabel = '28 · 08 · 2027',
-    this.weekday = 'Sábado',
-    this.place = 'Tribus Privé · Mañongo, Valencia',
-  });
+  const GatefoldIntro({super.key, required this.onOpened});
 
   final VoidCallback onOpened;
-  final String dateLabel;
-  final String weekday;
-  final String place;
 
   @override
   State<GatefoldIntro> createState() => _GatefoldIntroState();
 }
 
-enum _Stage { closed, opening, revealed, leaving }
-
 class _GatefoldIntroState extends State<GatefoldIntro>
     with TickerProviderStateMixin {
-  // Fracción del ancho que ocupa la puerta izquierda; la costura queda un poco
-  // a la izquierda del centro, como en la referencia.
-  static const _seam = 0.44;
-
   late final AnimationController _idle;
   late final AnimationController _open;
-  late final AnimationController _exit;
-  _Stage _stage = _Stage.closed;
+  bool _opening = false;
 
   bool get _reduceMotion => MediaQuery.of(context).disableAnimations;
 
@@ -57,16 +39,7 @@ class _GatefoldIntroState extends State<GatefoldIntro>
     _open =
         AnimationController(
           vsync: this,
-          duration: const Duration(milliseconds: 2600),
-        )..addStatusListener((status) {
-          if (status == AnimationStatus.completed && mounted) {
-            setState(() => _stage = _Stage.revealed);
-          }
-        });
-    _exit =
-        AnimationController(
-          vsync: this,
-          duration: const Duration(milliseconds: 800),
+          duration: const Duration(milliseconds: 1800),
         )..addStatusListener((status) {
           if (status == AnimationStatus.completed && mounted) {
             widget.onOpened();
@@ -79,7 +52,7 @@ class _GatefoldIntroState extends State<GatefoldIntro>
     super.didChangeDependencies();
     if (_reduceMotion) {
       _idle.stop();
-    } else if (!_idle.isAnimating && _stage == _Stage.closed) {
+    } else if (!_idle.isAnimating && !_opening) {
       _idle.repeat(reverse: true);
     }
   }
@@ -88,33 +61,20 @@ class _GatefoldIntroState extends State<GatefoldIntro>
   void dispose() {
     _idle.dispose();
     _open.dispose();
-    _exit.dispose();
     super.dispose();
   }
 
   void _openDoors() {
-    if (_stage != _Stage.closed) {
+    if (_opening) {
       return;
     }
     HapticFeedback.lightImpact();
     _idle.stop();
-    setState(() => _stage = _Stage.opening);
+    setState(() => _opening = true);
     if (_reduceMotion) {
-      _open.value = 1;
-    } else {
-      _open.forward();
+      _open.duration = const Duration(milliseconds: 250);
     }
-  }
-
-  void _enterSite() {
-    if (_stage == _Stage.leaving) {
-      return;
-    }
-    setState(() => _stage = _Stage.leaving);
-    if (_reduceMotion) {
-      _exit.duration = const Duration(milliseconds: 200);
-    }
-    _exit.forward();
+    _open.forward();
   }
 
   KeyEventResult _onKey(FocusNode node, KeyEvent event) {
@@ -124,12 +84,9 @@ class _GatefoldIntroState extends State<GatefoldIntro>
     final key = event.logicalKey;
     if (key == LogicalKeyboardKey.enter ||
         key == LogicalKeyboardKey.numpadEnter ||
-        key == LogicalKeyboardKey.space) {
-      _stage == _Stage.closed ? _openDoors() : _enterSite();
-      return KeyEventResult.handled;
-    }
-    if (key == LogicalKeyboardKey.escape) {
-      _enterSite();
+        key == LogicalKeyboardKey.space ||
+        key == LogicalKeyboardKey.escape) {
+      _openDoors();
       return KeyEventResult.handled;
     }
     return KeyEventResult.ignored;
@@ -140,19 +97,19 @@ class _GatefoldIntroState extends State<GatefoldIntro>
     return Focus(
       autofocus: true,
       onKeyEvent: _onKey,
-      child: AnimatedBuilder(
-        animation: _exit,
-        builder: (context, child) {
-          final t = Curves.easeInCubic.transform(_exit.value);
-          return IgnorePointer(
-            ignoring: _stage == _Stage.leaving,
-            child: Opacity(opacity: 1 - t, child: child),
-          );
-        },
-        child: Material(
-          color: GardenColors.paper,
-          child: LayoutBuilder(
-            builder: (context, constraints) => _buildScene(constraints.biggest),
+      // Mientras está cerrada, cualquier toque abre la invitación y no llega
+      // al sitio que espera debajo.
+      child: IgnorePointer(
+        ignoring: _opening,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: _openDoors,
+          child: Material(
+            type: MaterialType.transparency,
+            child: LayoutBuilder(
+              builder: (context, constraints) =>
+                  _buildScene(constraints.biggest),
+            ),
           ),
         ),
       ),
@@ -164,148 +121,143 @@ class _GatefoldIntroState extends State<GatefoldIntro>
       180.0,
       math.min(size.width * 0.36, size.height * 0.22),
     );
-    final leftWidth = size.width * _seam;
+    final half = size.width / 2;
+    final sealTop = size.height / 2 - sealSize / 2;
 
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        // La tarjeta que espera detrás de las puertas.
-        AnimatedBuilder(
-          animation: _open,
-          builder: (context, child) {
-            final t = const Interval(
-              0.3,
-              0.85,
-              curve: Curves.easeOutCubic,
-            ).transform(_open.value);
-            return _RevealCard(
-              progress: t,
-              dateLabel: widget.dateLabel,
-              weekday: widget.weekday,
-              place: widget.place,
-            );
-          },
-        ),
-        // Puertas.
-        AnimatedBuilder(
-          animation: Listenable.merge([_open, _idle]),
-          builder: (context, _) {
-            final slide = const Interval(
-              0.12,
-              0.72,
-              curve: Curves.easeInOutCubic,
-            ).transform(_open.value);
-            final rightOffset = slide * (size.width - leftWidth + 24);
-            final leftOffset = slide * (leftWidth + sealSize / 2 + 24);
-            final pulse = _stage == _Stage.closed && !_reduceMotion
-                ? Curves.easeInOutSine.transform(_idle.value)
-                : 0.0;
-            // El sello se hunde un poco antes de que se abran las puertas.
-            final press = const Interval(
-              0,
-              0.12,
-              curve: Curves.easeOut,
-            ).transform(_open.value);
-            final sealScale =
-                1 + 0.04 * pulse - 0.08 * math.sin(press * math.pi);
+    return AnimatedBuilder(
+      animation: Listenable.merge([_open, _idle]),
+      builder: (context, _) {
+        final reduce = _reduceMotion;
+        final slide = reduce
+            ? _open.value
+            : const Interval(
+                0.12,
+                1,
+                curve: Curves.easeInOutCubic,
+              ).transform(_open.value);
+        final offset = slide * (half + 24);
+        final pulse = !_opening && !reduce
+            ? Curves.easeInOutSine.transform(_idle.value)
+            : 0.0;
+        // El sello se hunde un poco antes de partirse.
+        final press = reduce
+            ? 0.0
+            : const Interval(
+                0,
+                0.12,
+                curve: Curves.easeOut,
+              ).transform(_open.value);
+        final sealScale = 1 + 0.04 * pulse - 0.08 * math.sin(press * math.pi);
+        // Con movimiento reducido, las puertas se desvanecen en vez de moverse.
+        final fade = reduce ? 1 - _open.value : 1.0;
 
-            return Stack(
-              fit: StackFit.expand,
-              children: [
-                Positioned(
-                  left: leftWidth + rightOffset,
-                  top: 0,
-                  bottom: 0,
-                  width: size.width - leftWidth,
-                  child: _Door(
-                    fullSize: size,
-                    originX: leftWidth,
-                    shadowOnLeft: false,
+        Widget sealHalf({required bool left}) => Positioned(
+          left: half - sealSize / 2 + (left ? -offset : offset),
+          top: sealTop,
+          width: sealSize,
+          height: sealSize,
+          child: Transform.scale(
+            scale: sealScale,
+            child: ClipRect(
+              clipper: _HalfClipper(left: left),
+              child: const _WaxSeal(),
+            ),
+          ),
+        );
+
+        return Opacity(
+          opacity: fade,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Positioned(
+                left: half + offset,
+                top: 0,
+                bottom: 0,
+                width: half,
+                child: _Door(
+                  fullSize: size,
+                  originX: half,
+                  shadowOnLeft: false,
+                ),
+              ),
+              Positioned(
+                left: -offset,
+                top: 0,
+                bottom: 0,
+                width: half,
+                child: _Door(fullSize: size, originX: 0, shadowOnLeft: true),
+              ),
+              sealHalf(left: true),
+              sealHalf(left: false),
+              // Área del sello para lectores de pantalla y pruebas.
+              Positioned(
+                left: half - sealSize / 2,
+                top: sealTop,
+                width: sealSize,
+                height: sealSize,
+                child: Semantics(
+                  button: true,
+                  label: 'Abrir invitación',
+                  child: MouseRegion(
+                    cursor: SystemMouseCursors.click,
+                    child: GestureDetector(
+                      key: const ValueKey('envelope-seal'),
+                      behavior: HitTestBehavior.opaque,
+                      onTap: _openDoors,
+                    ),
                   ),
                 ),
+              ),
+              if (!_opening)
                 Positioned(
-                  left: -leftOffset,
-                  top: 0,
-                  bottom: 0,
-                  width: leftWidth,
-                  child: _Door(fullSize: size, originX: 0, shadowOnLeft: true),
+                  left: 24,
+                  right: 24,
+                  bottom: math.max(28, size.height * 0.06),
+                  child: Center(child: _hint()),
                 ),
-                Positioned(
-                  left: leftWidth - sealSize / 2 - leftOffset,
-                  top: size.height * 0.46 - sealSize / 2,
-                  width: sealSize,
-                  height: sealSize,
-                  child: Transform.scale(
-                    scale: sealScale,
-                    child: _WaxSeal(onTap: _openDoors),
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
-        Positioned(
-          left: 24,
-          right: 24,
-          bottom: math.max(28, size.height * 0.06),
-          child: _buildBottomBar(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildBottomBar() {
-    final Widget content = switch (_stage) {
-      _Stage.closed => Center(
-        key: const ValueKey('hint'),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: GardenColors.paper.withValues(alpha: 0.9),
-            borderRadius: BorderRadius.circular(999),
-            boxShadow: const [
-              BoxShadow(color: Color(0x1A000000), blurRadius: 12),
             ],
           ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            child: Text(
-              'Toca el sello para abrir',
-              style: GoogleFonts.cormorantGaramond(
-                fontSize: 17,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 1.2,
-                color: GardenColors.ink,
-              ),
-            ),
-          ),
-        ),
-      ),
-      _Stage.opening => const SizedBox(key: ValueKey('empty'), height: 52),
-      _ => Center(
-        key: const ValueKey('cta'),
-        child: OutlinedButton(
-          onPressed: _enterSite,
-          style: OutlinedButton.styleFrom(
-            foregroundColor: GardenColors.signature,
-            backgroundColor: GardenColors.paper,
-            side: const BorderSide(color: GardenColors.signature, width: 1.2),
-            padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 16),
-            shape: const StadiumBorder(),
-            textStyle: GoogleFonts.cormorantGaramond(
-              fontSize: 19,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 1.4,
-            ),
-          ),
-          child: const Text('Ver invitación'),
-        ),
-      ),
-    };
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 450),
-      child: content,
+        );
+      },
     );
   }
+
+  Widget _hint() {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: GardenColors.paper.withValues(alpha: 0.92),
+        borderRadius: BorderRadius.circular(999),
+        boxShadow: const [BoxShadow(color: Color(0x1A000000), blurRadius: 12)],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        child: Text(
+          'Toca el sello para abrir',
+          style: GoogleFonts.cormorantGaramond(
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 1.2,
+            color: GardenColors.ink,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _HalfClipper extends CustomClipper<Rect> {
+  _HalfClipper({required this.left});
+
+  final bool left;
+
+  @override
+  Rect getClip(Size size) => left
+      ? Rect.fromLTWH(0, 0, size.width / 2, size.height)
+      : Rect.fromLTWH(size.width / 2, 0, size.width / 2, size.height);
+
+  @override
+  bool shouldReclip(_HalfClipper oldClipper) => oldClipper.left != left;
 }
 
 /// Una puerta: recorta su parte del mismo estampado para que, cerradas, se
@@ -381,217 +333,22 @@ class _PrintPainter extends CustomPainter {
   bool shouldRepaint(_PrintPainter oldDelegate) => false;
 }
 
-class _RevealCard extends StatelessWidget {
-  const _RevealCard({
-    required this.progress,
-    required this.dateLabel,
-    required this.weekday,
-    required this.place,
-  });
-
-  final double progress;
-  final String dateLabel;
-  final String weekday;
-  final String place;
+/// Sello de cera verde oliva con el monograma G&E.
+class _WaxSeal extends StatelessWidget {
+  const _WaxSeal();
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final size = constraints.biggest;
-        final ovalWidth = math.min(size.width * 0.86, size.height * 0.56);
-        final ovalHeight = math.min(size.height * 0.6, ovalWidth * 1.45);
-        final oval = Rect.fromCenter(
-          center: Offset(size.width / 2, size.height * 0.43),
-          width: ovalWidth,
-          height: ovalHeight,
-        );
-        final unit = ovalWidth / 320;
-
-        // Cada línea aparece un poco después de la anterior.
-        Widget line(int index, Widget child) {
-          final t = Interval(
-            0.25 + index * 0.1,
-            (0.65 + index * 0.1).clamp(0, 1),
-            curve: Curves.easeOutCubic,
-          ).transform(progress);
-          return Opacity(
-            opacity: t,
-            child: Transform.translate(
-              offset: Offset(0, 14 * (1 - t)),
-              child: child,
-            ),
-          );
-        }
-
-        return DecoratedBox(
-          decoration: const BoxDecoration(
-            color: GardenColors.paper,
-            image: DecorationImage(
-              image: AssetImage('assets/illustrations/paper_texture.jpg'),
-              repeat: ImageRepeat.repeat,
-              opacity: 0.3,
-            ),
-          ),
-          child: Stack(
-            children: [
-              Positioned.fill(
-                child: Opacity(
-                  opacity: Curves.easeOut.transform(progress),
-                  child: Transform.scale(
-                    scale: 0.94 + 0.06 * progress,
-                    child: RepaintBoundary(
-                      child: CustomPaint(painter: _WreathPainter(oval)),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned.fromRect(
-                rect: oval.deflate(ovalWidth * 0.12),
-                // En pantallas bajas el texto se encoge en vez de desbordar.
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      line(
-                        0,
-                        Text(
-                          'NUESTRA BODA',
-                          style: GoogleFonts.cormorantGaramond(
-                            fontSize: 14 * unit,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 3,
-                            color: GardenColors.ink,
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 10 * unit),
-                      line(1, _script('Gabriela', 54 * unit)),
-                      line(
-                        1,
-                        Transform.translate(
-                          offset: Offset(28 * unit, -14 * unit),
-                          child: _script(
-                            '&',
-                            34 * unit,
-                            color: GardenColors.lavender,
-                          ),
-                        ),
-                      ),
-                      line(
-                        2,
-                        Transform.translate(
-                          offset: Offset(0, -24 * unit),
-                          child: _script('Edgar', 54 * unit),
-                        ),
-                      ),
-                      line(
-                        3,
-                        Column(
-                          children: [
-                            Text(
-                              weekday.toUpperCase(),
-                              style: GoogleFonts.cormorantGaramond(
-                                fontSize: 12 * unit,
-                                letterSpacing: 2.5,
-                                color: GardenColors.ink,
-                              ),
-                            ),
-                            Text(
-                              dateLabel,
-                              style: GoogleFonts.cormorantGaramond(
-                                fontSize: 22 * unit,
-                                fontWeight: FontWeight.w700,
-                                color: GardenColors.ink,
-                              ),
-                            ),
-                            SizedBox(height: 6 * unit),
-                            Text(
-                              place,
-                              textAlign: TextAlign.center,
-                              style: GoogleFonts.cormorantGaramond(
-                                fontSize: 14 * unit,
-                                fontStyle: FontStyle.italic,
-                                color: GardenColors.oliveDeep,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
+        final size = constraints.maxWidth;
+        return CustomPaint(
+          painter: _WaxPainter(),
+          child: Center(
+            child: Monogram(size: size * 0.74, color: const Color(0xFFFBF7EA)),
           ),
         );
       },
-    );
-  }
-
-  Widget _script(
-    String text,
-    double fontSize, {
-    Color color = GardenColors.signature,
-  }) {
-    return Text(
-      text,
-      maxLines: 1,
-      style: GoogleFonts.pinyonScript(
-        fontSize: fontSize,
-        height: 1.1,
-        color: color,
-      ),
-    );
-  }
-}
-
-class _WreathPainter extends CustomPainter {
-  _WreathPainter(this.oval);
-
-  final Rect oval;
-
-  @override
-  void paint(Canvas canvas, Size size) => paintWildflowerWreath(canvas, oval);
-
-  @override
-  bool shouldRepaint(_WreathPainter oldDelegate) => oldDelegate.oval != oval;
-}
-
-/// Sello de cera azul campanilla con el monograma G&E.
-class _WaxSeal extends StatelessWidget {
-  const _WaxSeal({required this.onTap});
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      label: 'Abrir invitación',
-      child: MouseRegion(
-        cursor: SystemMouseCursors.click,
-        child: GestureDetector(
-          key: const ValueKey('envelope-seal'),
-          behavior: HitTestBehavior.opaque,
-          onTap: onTap,
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final size = constraints.maxWidth;
-              return CustomPaint(
-                painter: _WaxPainter(),
-                child: Center(
-                  child: Monogram(
-                    size: size * 0.74,
-                    color: const Color(0xFFF7F1E4),
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-      ),
     );
   }
 }
@@ -618,7 +375,7 @@ class _WaxPainter extends CustomPainter {
         ..shader = const RadialGradient(
           center: Alignment(-0.35, -0.4),
           radius: 1.05,
-          colors: [Color(0xFF8FA9E2), Color(0xFF5674BE), Color(0xFF3F5BA3)],
+          colors: [Color(0xFFC3CF97), Color(0xFF93A160), Color(0xFF6F7D45)],
           stops: [0, 0.6, 1],
         ).createShader(Rect.fromCircle(center: center, radius: r)),
     );
@@ -629,7 +386,7 @@ class _WaxPainter extends CustomPainter {
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = r * 0.07
-        ..color = const Color(0xFF3F5BA3).withValues(alpha: 0.7),
+        ..color = const Color(0xFF6F7D45).withValues(alpha: 0.7),
     );
     canvas.drawCircle(
       center.translate(-r * 0.02, -r * 0.03),
