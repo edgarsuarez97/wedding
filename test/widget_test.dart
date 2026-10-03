@@ -14,10 +14,13 @@ void main() {
     expect(find.text('Ver invitación'), findsNothing);
   });
 
-  testWidgets('Abrir el sello revela la tarjeta y luego el sitio', (
+  testWidgets('Abrir el sello revela la tarjeta y luego avisa al sitio', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(const WeddingApp());
+    var opened = false;
+    await tester.pumpWidget(
+      MaterialApp(home: EnvelopeIntro(onOpened: () => opened = true)),
+    );
 
     await tester.tap(find.byKey(const ValueKey('envelope-seal')));
     await tester.pump();
@@ -25,11 +28,12 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
 
     expect(find.text('Ver invitación'), findsOneWidget);
+    expect(opened, isFalse);
 
     await tester.tap(find.text('Ver invitación'));
     await tester.pump();
     await tester.pump(const Duration(seconds: 1));
 
-    expect(find.byType(EnvelopeIntro), findsNothing);
+    expect(opened, isTrue);
   });
 }

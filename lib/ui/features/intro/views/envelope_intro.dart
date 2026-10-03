@@ -807,7 +807,7 @@ class _GardenCornersPainter extends CustomPainter {
     _lavender(canvas, const Offset(-6, -6), 0.32, 170, _IntroPalette.lavender);
     _lavender(canvas, const Offset(-6, -6), 1.2, 150, _IntroPalette.periwinkle);
     _bluebells(canvas, const Offset(-6, -6), 0.72, 165);
-    _lily(canvas, const Offset(92, 58), 20, 0.4, _IntroPalette.peach);
+    _lily(canvas, const Offset(92, 58), 20, 0.4, _IntroPalette.lavender);
     _lily(canvas, const Offset(46, 112), 16, 1.1, _IntroPalette.pink);
     _lily(canvas, const Offset(132, 118), 12, 0.9, _IntroPalette.butter);
     _babysBreath(canvas, const Offset(150, 34));
