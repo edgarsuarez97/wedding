@@ -1,0 +1,32 @@
+{
+  "extraKnownMarketplaces": {
+    "dart-flutter": {
+      "source": {
+        "source": "github",
+        "repo": "flutter/agent-plugins"
+      }
+    },
+    "very-good-claude-code-marketplace": {
+      "source": {
+        "source": "github",
+        "repo": "VeryGoodOpenSource/very-good-claude-code-marketplace"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "dart-flutter@dart-flutter": true,
+    "vgv-ai-flutter-plugin@very-good-claude-code-marketplace": true
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
