@@ -10,7 +10,7 @@ class WeddingContentRepository {
         heroImageUrl:
             'https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&w=1400&q=80',
         story:
-            'Desde una conversación en una cafetería hasta una promesa para toda la vida, Edgar y Gabriela han construido un amor lleno de risas, fé y aventura. Esta celebración es nuestra carta de amor para la familia y los amigos que han sido parte del camino.',
+            'Desde la primera conversación, en un lugar donde ninguno pensó que estaría ese día, hasta una vida entera llena de sorpresas, hemos crecido juntos amándonos entre risas, fe y aventura. Lo nuestro es inefable y eso nunca va a cambiar. Nos quedan muchísimas aventuras por vivir, y nos hace muy felices contar con ustedes, la familia y los amigos que han sido parte del camino, para dar el paso al matrimonio.',
         schedule: [
           ScheduleItem(
             timeLabel: '3:30 PM',

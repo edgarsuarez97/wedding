@@ -22,8 +22,8 @@ class StorySection extends StatelessWidget {
         children: [
           const GardenHeading(
             eyebrow: 'Nuestra historia',
-            title: 'Una cafetería,\n',
-            accent: 'una promesa',
+            title: 'Atracción a\n',
+            accent: 'primera vista',
           ),
           const SizedBox(height: 18),
           ConstrainedBox(
