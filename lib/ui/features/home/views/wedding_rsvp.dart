@@ -249,7 +249,11 @@ class _RsvpSectionState extends State<RsvpSection> {
                               value: _guestCount,
                               options: {
                                 for (var i = 1; i <= state.maxGuests; i++)
-                                  i: i == 1 ? 'Solo yo' : '$i personas',
+                                  i: switch (i) {
+                                    1 => 'Solo yo',
+                                    2 => 'Con acompañante',
+                                    _ => '$i personas',
+                                  },
                               },
                               onChanged: (value) =>
                                   setState(() => _guestCount = value),
@@ -285,22 +289,31 @@ class _RsvpSectionState extends State<RsvpSection> {
                               onPressed: isSubmitting ? null : _submit,
                             ),
                           ),
-                          const SizedBox(height: 12),
-                          AnimatedOpacity(
-                            opacity: _thanks == null ? 0 : 1,
-                            duration: const Duration(milliseconds: 600),
-                            child: Text(
-                              _thanks ?? ' ',
-                              textAlign: TextAlign.center,
-                              style: AppTheme.script(
-                                fontSize: 34,
-                                color: AppTheme.roseInk,
-                              ),
+                          // El agradecimiento solo ocupa espacio cuando aparece.
+                          AnimatedSize(
+                            duration: const Duration(milliseconds: 400),
+                            curve: Curves.easeOutCubic,
+                            child: AnimatedOpacity(
+                              opacity: _thanks == null ? 0 : 1,
+                              duration: const Duration(milliseconds: 600),
+                              child: _thanks == null
+                                  ? const SizedBox(width: double.infinity)
+                                  : Padding(
+                                      padding: const EdgeInsets.only(top: 12),
+                                      child: Text(
+                                        _thanks!,
+                                        textAlign: TextAlign.center,
+                                        style: AppTheme.script(
+                                          fontSize: 34,
+                                          color: AppTheme.roseInk,
+                                        ),
+                                      ),
+                                    ),
                             ),
                           ),
-                          const SizedBox(height: 18),
+                          const SizedBox(height: 10),
                           const Divider(color: AppTheme.cardBorder),
-                          const SizedBox(height: 14),
+                          const SizedBox(height: 10),
                           Center(
                             child: OutlinedButton.icon(
                               onPressed: _openGifts,
