@@ -42,6 +42,9 @@ class InvitationCard extends StatelessWidget {
     );
   }
 
+  /// Tope del ancho que se usa para medir las flores de la tarjeta.
+  static const _maxFlowerBase = 400.0;
+
   static double sealSizeFor(Size card) =>
       math.min(170.0, math.min(card.width * 0.34, card.height * 0.22));
 
@@ -115,7 +118,7 @@ class InvitationCard extends StatelessWidget {
                   i < 3
                       ? Rect.fromLTWH(0, 0, side, screen.height)
                       : Rect.fromLTWH(card.right, 0, side, screen.height),
-                  sizeBase: math.min(side, 360),
+                  sizeBase: math.min(side, 240),
                   opacity: 0.85,
                 ),
             // Grano de papel encima de todo para que se sienta impreso.
@@ -144,7 +147,9 @@ class InvitationCard extends StatelessWidget {
             ),
             ..._text(card, sealSize),
             for (final f in _cardFlowers)
-              _flower(f, card, sizeBase: card.width),
+              // En pantallas grandes las flores no crecen más allá del
+              // tamaño que tienen en un teléfono grande.
+              _flower(f, card, sizeBase: math.min(card.width, _maxFlowerBase)),
           ],
         );
       },
