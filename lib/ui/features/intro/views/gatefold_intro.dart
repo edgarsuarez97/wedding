@@ -1,16 +1,14 @@
 import 'dart:math' as math;
-import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_fonts/google_fonts.dart';
 
-import 'printed_bouquet.dart';
-import 'garden_colors.dart';
+import 'invitation_card.dart';
 
-/// Portada de la invitación: dos puertas con estampado de flores silvestres
-/// unidas al centro por un sello de cera verde oliva con el monograma.
+/// Portada de la invitación: una tarjeta con marco de cinta salvia, lazo y
+/// flores de acuarela, cortada al medio en dos puertas que une un sello de
+/// cera con el monograma.
 ///
 /// Un solo toque basta: el sello se parte a la mitad, las puertas se deslizan
 /// hacia los lados y debajo queda el sitio. Al terminar llama a [onOpened].
@@ -28,13 +26,6 @@ class _GatefoldIntroState extends State<GatefoldIntro>
   late final AnimationController _idle;
   late final AnimationController _open;
   bool _opening = false;
-
-  // El estampado se pinta una sola vez a imagen: en la web no hay caché de
-  // rasterizado y repintar cientos de degradados en cada cuadro de la
-  // apertura la vuelve entrecortada.
-  ui.Image? _print;
-  Size? _printSize;
-  double? _printRatio;
 
   bool get _reduceMotion => MediaQuery.of(context).disableAnimations;
 
@@ -70,33 +61,7 @@ class _GatefoldIntroState extends State<GatefoldIntro>
   void dispose() {
     _idle.dispose();
     _open.dispose();
-    _print?.dispose();
     super.dispose();
-  }
-
-  void _ensurePrint(Size size, double ratio) {
-    if (size.isEmpty || (size == _printSize && ratio == _printRatio)) {
-      return;
-    }
-    _printSize = size;
-    _printRatio = ratio;
-    final recorder = ui.PictureRecorder();
-    final canvas = Canvas(recorder)..scale(ratio);
-    paintPrintedBouquet(canvas, size);
-    final picture = recorder.endRecording();
-    picture
-        .toImage((size.width * ratio).ceil(), (size.height * ratio).ceil())
-        .then((image) {
-          picture.dispose();
-          if (!mounted || size != _printSize || ratio != _printRatio) {
-            image.dispose();
-            return;
-          }
-          setState(() {
-            _print?.dispose();
-            _print = image;
-          });
-        });
   }
 
   void _openDoors() {
@@ -152,12 +117,8 @@ class _GatefoldIntroState extends State<GatefoldIntro>
   }
 
   Widget _buildScene(Size size) {
-    final ratio = MediaQuery.devicePixelRatioOf(context);
-    _ensurePrint(size, ratio);
-    final sealSize = math.min(
-      180.0,
-      math.min(size.width * 0.36, size.height * 0.22),
-    );
+    final card = InvitationCard.rectFor(size);
+    final sealSize = InvitationCard.sealSizeFor(card.size);
     final half = size.width / 2;
     final sealTop = size.height / 2 - sealSize / 2;
 
@@ -242,10 +203,10 @@ class _GatefoldIntroState extends State<GatefoldIntro>
                 bottom: 0,
                 width: half,
                 child: _Door(
-                  image: _print,
                   fullSize: size,
                   originX: half,
                   shadowOnLeft: false,
+                  opening: _opening,
                 ),
               ),
               Positioned(
@@ -254,10 +215,10 @@ class _GatefoldIntroState extends State<GatefoldIntro>
                 bottom: 0,
                 width: half,
                 child: _Door(
-                  image: _print,
                   fullSize: size,
                   originX: 0,
                   shadowOnLeft: true,
+                  opening: _opening,
                 ),
               ),
               if (!_opening) ...[
@@ -288,39 +249,10 @@ class _GatefoldIntroState extends State<GatefoldIntro>
                   ),
                 ),
               ),
-              if (!_opening)
-                Positioned(
-                  left: 24,
-                  right: 24,
-                  bottom: math.max(28, size.height * 0.06),
-                  child: Center(child: _hint()),
-                ),
             ],
           ),
         );
       },
-    );
-  }
-
-  Widget _hint() {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: GardenColors.paper.withValues(alpha: 0.92),
-        borderRadius: BorderRadius.circular(999),
-        boxShadow: const [BoxShadow(color: Color(0x1A000000), blurRadius: 12)],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        child: Text(
-          'Toca el sello para abrir',
-          style: GoogleFonts.cormorantGaramond(
-            fontSize: 17,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 1.2,
-            color: GardenColors.ink,
-          ),
-        ),
-      ),
     );
   }
 }
@@ -339,88 +271,73 @@ class _HalfClipper extends CustomClipper<Rect> {
   bool shouldReclip(_HalfClipper oldClipper) => oldClipper.left != left;
 }
 
-/// Una puerta: recorta su parte del mismo estampado para que, cerradas, se
+/// Una puerta: recorta su mitad de la misma tarjeta para que, cerradas, se
 /// lean como un solo papel cortado al medio.
 class _Door extends StatelessWidget {
   const _Door({
-    required this.image,
     required this.fullSize,
     required this.originX,
     required this.shadowOnLeft,
+    required this.opening,
   });
 
-  final ui.Image? image;
   final Size fullSize;
   final double originX;
   final bool shadowOnLeft;
+  final bool opening;
 
   @override
   Widget build(BuildContext context) {
     return IgnorePointer(
       child: DecoratedBox(
+        // Cerradas no se nota la costura; la sombra aparece al separarse.
         decoration: BoxDecoration(
           boxShadow: [
-            BoxShadow(
-              color: const Color(0x26000000),
-              blurRadius: 10,
-              offset: Offset(shadowOnLeft ? 4 : -2, 0),
-            ),
+            if (opening)
+              BoxShadow(
+                color: const Color(0x26000000),
+                blurRadius: 10,
+                offset: Offset(shadowOnLeft ? 4 : -2, 0),
+              ),
           ],
         ),
         child: ClipRect(
           child: Stack(
+            clipBehavior: Clip.none,
             children: [
               Positioned(
                 left: -originX,
                 top: 0,
                 width: fullSize.width,
                 height: fullSize.height,
-                child: image == null
-                    ? const ColoredBox(color: PrintColors.paper)
-                    : RawImage(
-                        image: image,
-                        width: fullSize.width,
-                        height: fullSize.height,
-                        fit: BoxFit.fill,
-                      ),
+                // La tarjeta se rasteriza una vez y en cada cuadro solo se
+                // desplaza, así la apertura va fluida también en la web.
+                child: RepaintBoundary(
+                  // Las dos puertas pintan la misma tarjeta; solo la
+                  // izquierda se anuncia a los lectores de pantalla.
+                  child: ExcludeSemantics(
+                    excluding: !shadowOnLeft,
+                    child: InvitationCard(hideHint: opening),
+                  ),
+                ),
               ),
-              // Grano de papel encima de la tinta para que se sienta impreso.
-              Positioned(
-                left: -originX,
-                top: 0,
-                width: fullSize.width,
-                height: fullSize.height,
-                child: const IgnorePointer(
+              if (opening)
+                Positioned.fill(
                   child: DecoratedBox(
                     decoration: BoxDecoration(
-                      image: DecorationImage(
-                        image: AssetImage(
-                          'assets/illustrations/paper_texture.jpg',
-                        ),
-                        repeat: ImageRepeat.repeat,
-                        opacity: 0.22,
+                      gradient: LinearGradient(
+                        begin: shadowOnLeft
+                            ? Alignment.centerRight
+                            : Alignment.centerLeft,
+                        end: shadowOnLeft
+                            ? Alignment.centerLeft
+                            : Alignment.centerRight,
+                        stops: const [0, 0.06],
+                        colors: [const Color(0x12000000), Colors.transparent],
                       ),
                     ),
                   ),
                 ),
-              ),
-              // Borde interior de papel: un brillo y una sombra suaves.
-              Positioned.fill(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: shadowOnLeft
-                          ? Alignment.centerRight
-                          : Alignment.centerLeft,
-                      end: shadowOnLeft
-                          ? Alignment.centerLeft
-                          : Alignment.centerRight,
-                      stops: const [0, 0.06],
-                      colors: [const Color(0x12000000), Colors.transparent],
-                    ),
-                  ),
-                ),
-              ),
             ],
           ),
         ),
@@ -429,7 +346,7 @@ class _Door extends StatelessWidget {
   }
 }
 
-/// Sello de cera verde oliva con el monograma G&E.
+/// Sello de cera verde salvia con el monograma G&E.
 class _WaxSeal extends StatelessWidget {
   const _WaxSeal();
 
@@ -503,7 +420,7 @@ class _WaxPainter extends CustomPainter {
         ..shader = const RadialGradient(
           center: Alignment(-0.35, -0.4),
           radius: 1.05,
-          colors: [Color(0xFFC3CF97), Color(0xFF93A160), Color(0xFF6F7D45)],
+          colors: [Color(0xFFC9D1BA), Color(0xFF9DA790), Color(0xFF6E7A62)],
           stops: [0, 0.6, 1],
         ).createShader(Rect.fromCircle(center: center, radius: r)),
     );
@@ -514,7 +431,7 @@ class _WaxPainter extends CustomPainter {
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = r * 0.07
-        ..color = const Color(0xFF6F7D45).withValues(alpha: 0.7),
+        ..color = const Color(0xFF6E7A62).withValues(alpha: 0.7),
     );
     canvas.drawCircle(
       center.translate(-r * 0.02, -r * 0.03),

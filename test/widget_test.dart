@@ -10,7 +10,8 @@ void main() {
     await tester.pumpWidget(const WeddingApp());
 
     expect(find.byType(GatefoldIntro), findsOneWidget);
-    expect(find.text('Toca el sello para abrir'), findsOneWidget);
+    // Cada puerta pinta su mitad de la misma tarjeta.
+    expect(find.text('Toca el sello para abrir'), findsNWidgets(2));
   });
 
   testWidgets('Un toque en el sello abre las puertas y muestra el sitio', (

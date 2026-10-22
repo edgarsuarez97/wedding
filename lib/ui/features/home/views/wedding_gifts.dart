@@ -61,7 +61,7 @@ class _GiftDialogState extends State<_GiftDialog> {
                 ),
               ),
               const Center(
-                child: WildflowerIcon(Wildflower.sweetPea, size: 44),
+                child: WildflowerIcon(Wildflower.bloomPinkRose, size: 52),
               ),
               const SizedBox(height: 8),
               Text(

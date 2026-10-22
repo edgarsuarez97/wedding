@@ -587,7 +587,7 @@ class _BeatingBloomState extends State<_BeatingBloom>
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: _controller,
-      child: WildflowerIcon(Wildflower.forgetMeNot, size: widget.size),
+      child: WildflowerIcon(Wildflower.bloomViolet, size: widget.size),
       builder: (context, child) {
         final t = _controller.value;
         final beat = t < 0.15 ? t / 0.15 : (1 - (t - 0.15) / 0.85);

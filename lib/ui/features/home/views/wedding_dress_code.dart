@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:wedding_g_and_e/ui/core/garden/garden_card.dart';
 import 'package:wedding_g_and_e/ui/core/garden/wildflower.dart';
 import 'package:wedding_g_and_e/ui/core/theme/app_theme.dart';
@@ -225,16 +226,25 @@ class _GuideCard extends StatelessWidget {
               clipBehavior: Clip.none,
               children: [
                 Positioned.fill(
-                  child: CustomPaint(painter: _FigurePainter(figure)),
+                  child: figure == _Figure.dress
+                      ? SvgPicture.asset(
+                          'assets/illustrations/watercolor/dress.svg',
+                          colorFilter: const ColorFilter.mode(
+                            AppTheme.ink,
+                            BlendMode.srcIn,
+                          ),
+                          excludeFromSemantics: true,
+                        )
+                      : CustomPaint(painter: _SuitPainter()),
                 ),
                 Positioned(
                   left: figure == _Figure.dress ? 24 : 40,
                   top: figure == _Figure.dress ? 14 : 12,
                   child: WildflowerIcon(
                     figure == _Figure.dress
-                        ? Wildflower.forgetMeNot
-                        : Wildflower.buttercup,
-                    size: 16,
+                        ? Wildflower.bloomViolet
+                        : Wildflower.bloomYellowCosmos,
+                    size: 18,
                   ),
                 ),
               ],
@@ -276,50 +286,29 @@ class _GuideCard extends StatelessWidget {
   }
 }
 
-class _FigurePainter extends CustomPainter {
-  _FigurePainter(this.figure);
-
-  final _Figure figure;
-
+/// Traje de línea fina; el vestido usa la ilustración dress.svg.
+class _SuitPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     canvas.scale(size.width / 64);
-    final path = Path();
-    if (figure == _Figure.dress) {
-      path
-        ..moveTo(25, 6)
-        ..lineTo(22, 2)
-        ..moveTo(39, 6)
-        ..lineTo(42, 2)
-        ..moveTo(24, 6)
-        ..cubicTo(28, 10, 36, 10, 40, 6)
-        ..lineTo(38, 22)
-        ..cubicTo(44, 32, 50, 46, 54, 60)
-        ..cubicTo(40, 63, 24, 63, 10, 60)
-        ..cubicTo(14, 46, 20, 32, 26, 22)
-        ..close()
-        ..moveTo(26, 22)
-        ..cubicTo(30, 24, 34, 24, 38, 22);
-    } else {
-      path
-        ..moveTo(22, 4)
-        ..lineTo(32, 18)
-        ..lineTo(42, 4)
-        ..moveTo(22, 4)
-        ..lineTo(12, 10)
-        ..lineTo(10, 60)
-        ..lineTo(28, 60)
-        ..lineTo(32, 18)
-        ..lineTo(36, 60)
-        ..lineTo(54, 60)
-        ..lineTo(52, 10)
-        ..lineTo(42, 4)
-        ..moveTo(18, 30)
-        ..lineTo(26, 30)
-        ..moveTo(28, 60)
-        ..lineTo(32, 50)
-        ..lineTo(36, 60);
-    }
+    final path = Path()
+      ..moveTo(22, 4)
+      ..lineTo(32, 18)
+      ..lineTo(42, 4)
+      ..moveTo(22, 4)
+      ..lineTo(12, 10)
+      ..lineTo(10, 60)
+      ..lineTo(28, 60)
+      ..lineTo(32, 18)
+      ..lineTo(36, 60)
+      ..lineTo(54, 60)
+      ..lineTo(52, 10)
+      ..lineTo(42, 4)
+      ..moveTo(18, 30)
+      ..lineTo(26, 30)
+      ..moveTo(28, 60)
+      ..lineTo(32, 50)
+      ..lineTo(36, 60);
     canvas
       ..drawPath(path, Paint()..color = const Color(0x59C9C1E3))
       ..drawPath(
@@ -334,6 +323,5 @@ class _FigurePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _FigurePainter oldDelegate) =>
-      oldDelegate.figure != figure;
+  bool shouldRepaint(covariant _SuitPainter oldDelegate) => false;
 }

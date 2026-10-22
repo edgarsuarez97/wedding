@@ -187,7 +187,7 @@ class _RsvpSectionState extends State<RsvpSection> {
                   ),
                   padding: EdgeInsets.fromLTRB(
                     wide ? 40 : 22,
-                    80,
+                    90,
                     wide ? 40 : 22,
                     36,
                   ),
@@ -341,7 +341,7 @@ class _RsvpSectionState extends State<RsvpSection> {
                     ),
                   ),
                 ),
-                const Positioned(top: -38, child: _FlowerCrown()),
+                const Positioned(top: -54, child: _FlowerCrown()),
               ],
             ),
           ),
@@ -548,55 +548,13 @@ class _FlowerCrown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget at(double x, double y, Wildflower f, double size, [double r = 0]) {
-      return Positioned(
-        left: x - size / 2,
-        top: y - size / 2,
-        child: Transform.rotate(
-          angle: r,
-          child: WildflowerIcon(f, size: size),
-        ),
-      );
-    }
-
-    return IgnorePointer(
-      child: SizedBox(
-        width: 300,
-        height: 92,
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Positioned.fill(child: CustomPaint(painter: _CrownStemPainter())),
-            at(134, 30, Wildflower.babysBreath, 30),
-            at(166, 30, Wildflower.babysBreath, 30),
-            at(74, 58, Wildflower.forgetMeNot, 34),
-            at(226, 58, Wildflower.buttercup, 34),
-            at(96, 62, Wildflower.bellflower, 34, 0.26),
-            at(204, 62, Wildflower.bellflower, 34, -0.26),
-            at(116, 46, Wildflower.orchid, 48),
-            at(184, 46, Wildflower.orchid, 48),
-            at(150, 40, Wildflower.lily, 76),
-          ],
-        ),
+    return const IgnorePointer(
+      child: WildflowerIcon(
+        Wildflower.crownBouquet,
+        width: 270,
+        height: 128,
+        alignment: Alignment.bottomCenter,
       ),
     );
   }
-}
-
-class _CrownStemPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    canvas.drawPath(
-      Path()
-        ..moveTo(20, 70)
-        ..cubicTo(80, 30, 220, 30, 280, 70),
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.6
-        ..color = AppTheme.stem,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
