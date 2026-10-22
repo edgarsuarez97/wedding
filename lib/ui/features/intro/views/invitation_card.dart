@@ -6,9 +6,9 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../../../core/garden/wildflower.dart';
 import '../../../core/theme/app_theme.dart';
 
-/// Tarjeta de la portada: papel crema, marco de cinta salvia con lazo arriba
-/// y ramilletes de flores silvestres en acuarela que trepan por los lados,
-/// como una invitación impresa. Ocupa toda la pantalla; la tarjeta queda
+/// Tarjeta de la portada: papel crema y marco de cinta salvia cubierto de
+/// flores silvestres en acuarela a lo largo de todo su contorno, como una
+/// invitación impresa. Ocupa toda la pantalla; la tarjeta queda
 /// centrada y, si sobra espacio a los lados, asoman más flores en el papel.
 class InvitationCard extends StatelessWidget {
   const InvitationCard({super.key, this.hideHint = false});
@@ -48,8 +48,25 @@ class InvitationCard extends StatelessWidget {
   // Flores dentro de la tarjeta: (flor, x, y, tamaño, giro en grados,
   // reflejada). x e y marcan dónde nace el tallo, en fracciones del ancho y
   // del alto de la tarjeta; el tamaño es el lado de su caja, en fracciones
-  // del ancho. El orden va del fondo al frente.
+  // del ancho. El orden va del fondo al frente. Las del borde superior
+  // cuelgan (giro cercano a 180°) y las de los lados suben junto al marco.
   static const _cardFlowers = [
+    // Borde superior.
+    (Wildflower.lavenderArc, 0.1, 0.02, 0.44, 150.0, false),
+    (Wildflower.lilacVine, 0.32, 0.0, 0.44, 176.0, true),
+    (Wildflower.yellowBranch, 0.68, 0.0, 0.42, 184.0, false),
+    (Wildflower.tealBudsTall, 0.9, 0.02, 0.42, 205.0, true),
+    (Wildflower.forgetMeNotSprig, 0.5, 0.0, 0.3, 180.0, false),
+    (Wildflower.purpleAnemone, 0.2, 0.015, 0.32, 200.0, false),
+    (Wildflower.peachButtercups, 0.8, 0.015, 0.3, 160.0, true),
+    // Lados: ramitas que suben pegadas al marco.
+    (Wildflower.blueBellflower, 0.03, 0.3, 0.34, 10.0, false),
+    (Wildflower.violets, 0.04, 0.44, 0.3, 14.0, false),
+    (Wildflower.pinkPoppy, 0.03, 0.6, 0.36, 8.0, false),
+    (Wildflower.lilacPeony, 0.97, 0.31, 0.32, -10.0, true),
+    (Wildflower.tealBudsTall, 0.97, 0.47, 0.36, -8.0, false),
+    (Wildflower.yellowCosmos, 0.96, 0.58, 0.3, -14.0, true),
+    // Borde inferior y esquinas de abajo.
     (Wildflower.lavender, 0.06, 0.82, 0.72, -6.0, false),
     (Wildflower.buttercupSprig, 0.1, 0.74, 0.4, 8.0, false),
     (Wildflower.violets, 0.13, 0.9, 0.34, 8.0, false),
@@ -128,16 +145,6 @@ class InvitationCard extends StatelessWidget {
             ..._text(card, sealSize),
             for (final f in _cardFlowers)
               _flower(f, card, sizeBase: card.width),
-            // Lazo atado sobre el borde superior del marco.
-            Positioned(
-              left: card.center.dx - card.width * 0.11,
-              top: card.top - card.width * 0.095,
-              width: card.width * 0.22,
-              child: SvgPicture.asset(
-                'assets/illustrations/watercolor/bow.svg',
-                excludeFromSemantics: true,
-              ),
-            ),
           ],
         );
       },
@@ -175,59 +182,11 @@ class InvitationCard extends StatelessWidget {
 
   List<Widget> _text(Rect card, double sealSize) {
     final w = card.width;
-    final gap = sealSize / 2 + w * 0.045;
-    final top = card.top + card.height * 0.12;
     return [
-      // Nombres y fecha sobre el sello.
-      Positioned(
-        left: card.left + w * 0.14,
-        width: w * 0.72,
-        top: top,
-        height: card.center.dy - gap - top,
-        child: FittedBox(
-          fit: BoxFit.scaleDown,
-          alignment: Alignment.bottomCenter,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'NOS CASAMOS',
-                style: AppTheme.eyebrow(
-                  color: _Paper.sage,
-                ).copyWith(fontSize: w * 0.034, letterSpacing: w * 0.012),
-              ),
-              SizedBox(height: w * 0.025),
-              Text(
-                'Gabriela\n& Edgar',
-                textAlign: TextAlign.center,
-                style: AppTheme.script(
-                  fontSize: w * 0.15,
-                  color: _Paper.sageInk,
-                ).copyWith(height: 1.05),
-              ),
-              SizedBox(height: w * 0.03),
-              Text(
-                '28 · 08 · 2027',
-                style: AppTheme.display(
-                  fontSize: w * 0.07,
-                  color: _Paper.sageInk,
-                ),
-              ),
-              SizedBox(height: w * 0.01),
-              Text(
-                'VALENCIA',
-                style: AppTheme.eyebrow(
-                  color: _Paper.sage,
-                ).copyWith(fontSize: w * 0.03, letterSpacing: w * 0.012),
-              ),
-            ],
-          ),
-        ),
-      ),
       Positioned(
         left: card.left + w * 0.2,
         width: w * 0.6,
-        top: card.center.dy + gap,
+        top: card.center.dy + sealSize / 2 + w * 0.045,
         child: AnimatedOpacity(
           opacity: hideHint ? 0 : 1,
           duration: const Duration(milliseconds: 200),
@@ -248,6 +207,4 @@ class InvitationCard extends StatelessWidget {
 
 abstract final class _Paper {
   static const backdrop = Color(0xFFFBF8F1);
-  static const sage = Color(0xFF7E8A70);
-  static const sageInk = Color(0xFF5F6B55);
 }

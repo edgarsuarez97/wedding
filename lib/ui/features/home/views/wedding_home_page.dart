@@ -305,16 +305,13 @@ class _WeddingExperienceState extends State<WeddingExperience> {
                           ),
                         ),
                       ),
-                      const GardenDivider(),
 
-                      // Confirmación de asistencia
+                      // Confirmación de asistencia. Sin separador: la corona
+                      // de flores del formulario ya marca el cambio de sección.
                       const OnScreen(
-                        child: Padding(
-                          padding: EdgeInsets.only(top: 40),
-                          child: SectionContainer(
-                            background: Colors.transparent,
-                            child: ScrollReveal(child: RsvpSection()),
-                          ),
+                        child: SectionContainer(
+                          background: Colors.transparent,
+                          child: ScrollReveal(child: RsvpSection()),
                         ),
                       ),
                       const GardenDivider(),
