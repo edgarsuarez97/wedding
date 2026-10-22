@@ -50,11 +50,11 @@ class ScheduleSection extends StatelessWidget {
   final List<ScheduleItem> schedule;
 
   static const _flowers = [
-    Wildflower.forgetMeNot,
-    Wildflower.orchid,
-    Wildflower.buttercup,
-    Wildflower.lily,
-    Wildflower.bellflower,
+    Wildflower.bloomViolet,
+    Wildflower.bloomPinkRose,
+    Wildflower.bloomYellowCosmos,
+    Wildflower.bloomLilacPeony,
+    Wildflower.bloomPeachButtercup,
   ];
 
   @override

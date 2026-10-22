@@ -45,7 +45,11 @@ class GardenCard extends StatelessWidget {
               child: child,
             ),
             if (withBouquet)
-              const Positioned(right: -14, bottom: -10, child: CornerBouquet()),
+              const Positioned(
+                right: -8,
+                bottom: -6,
+                child: CornerBouquet(size: 170),
+              ),
           ],
         ),
       ),
