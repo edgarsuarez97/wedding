@@ -39,7 +39,7 @@ En la pestaña **Invitados**, escribe una fila por invitación:
 Cada invitado recibe su enlace personal con su código:
 
 ```
-https://edgarsuarez97.github.io/wedding/?i=GE01
+https://gyewedding.com/?i=GE01
 ```
 
 - Con **1 cupo**, el formulario no muestra "Número de asistentes" y guarda

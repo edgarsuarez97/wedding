@@ -37,8 +37,9 @@ jobs:
           REPO_NAME="${GITHUB_REPOSITORY#*/}"
           BASE_HREF="/$REPO_NAME/"
 
-          # For user/organization pages repos like <user>.github.io, use root base href.
-          if [[ "$REPO_NAME" == *.github.io ]]; then
+          # Con dominio propio (web/CNAME, p. ej. gyewedding.com) o en repos
+          # <user>.github.io, el sitio vive en la raíz.
+          if [[ -s web/CNAME || "$REPO_NAME" == *.github.io ]]; then
             BASE_HREF="/"
           fi
 

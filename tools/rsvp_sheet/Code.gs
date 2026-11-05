@@ -9,7 +9,7 @@
  *               Primera respuesta | Última actualización | Veces respondido |
  *               Bebe alcohol | Vio aportes
  *
- * Cada invitado recibe su enlace personal: https://edgarsuarez97.github.io/wedding/?i=CODIGO
+ * Cada invitado recibe su enlace personal: https://gyewedding.com/?i=CODIGO
  * Si alguien entra sin código, puede confirmar solo para sí mismo y su
  * respuesta se identifica por el correo.
  */
