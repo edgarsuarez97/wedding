@@ -109,11 +109,10 @@ class _WeddingExperienceState extends State<WeddingExperience> {
       return;
     }
     _didPrecache = true;
-    final previewImages = [
-      widget.content.heroImageUrl,
-      ...widget.content.galleryImageUrls.take(2),
-    ];
-    for (final imageUrl in previewImages) {
+    unawaited(
+      precacheImage(AssetImage(widget.content.heroImageUrl), context),
+    );
+    for (final imageUrl in widget.content.galleryImageUrls.take(2)) {
       unawaited(precacheImage(NetworkImage(imageUrl), context));
     }
   }
