@@ -109,9 +109,10 @@ class _WeddingExperienceState extends State<WeddingExperience> {
       return;
     }
     _didPrecache = true;
-    unawaited(
-      precacheImage(AssetImage(widget.content.heroImageUrl), context),
-    );
+    final heroImage = MediaQuery.sizeOf(context).width < heroMobileBreakpoint
+        ? widget.content.heroMobileImageUrl
+        : widget.content.heroImageUrl;
+    unawaited(precacheImage(AssetImage(heroImage), context));
     for (final imageUrl in widget.content.galleryImageUrls.take(2)) {
       unawaited(precacheImage(NetworkImage(imageUrl), context));
     }
@@ -255,6 +256,8 @@ class _WeddingExperienceState extends State<WeddingExperience> {
                         child: HeroSection(
                           weddingDate: widget.content.weddingDate,
                           heroImageUrl: widget.content.heroImageUrl,
+                          heroMobileImageUrl:
+                              widget.content.heroMobileImageUrl,
                           coupleNames: widget.content.coupleNames,
                           isMusicPlaying: _isHeroMusicPlaying,
                           isMusicBusy: _isPreparingAudio,

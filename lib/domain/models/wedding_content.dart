@@ -7,6 +7,7 @@ class WeddingContent extends Equatable {
     required this.coupleNames,
     required this.weddingDate,
     required this.heroImageUrl,
+    required this.heroMobileImageUrl,
     required this.story,
     required this.schedule,
     required this.galleryImageUrls,
@@ -16,6 +17,7 @@ class WeddingContent extends Equatable {
   final String coupleNames;
   final DateTime weddingDate;
   final String heroImageUrl;
+  final String heroMobileImageUrl;
   final String story;
   final List<ScheduleItem> schedule;
   final List<String> galleryImageUrls;
@@ -26,6 +28,7 @@ class WeddingContent extends Equatable {
     coupleNames,
     weddingDate,
     heroImageUrl,
+    heroMobileImageUrl,
     story,
     schedule,
     galleryImageUrls,

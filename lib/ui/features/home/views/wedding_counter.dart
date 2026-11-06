@@ -14,11 +14,15 @@ const _venueLine = 'Tribus Privé · Mañongo, Valencia';
 const _mapsUrl =
     'https://www.google.com/maps/place/IP+Tribus+Prive/@10.231332,-67.9980372,17z/data=!4m14!1m7!3m6!1s0x8e8067427044ab73:0xb249651b3d80e67a!2sIP+Tribus+Prive!8m2!3d10.231332!4d-67.9954623!16s%2Fg%2F11tp7qkc_0!3m5!1s0x8e8067427044ab73:0xb249651b3d80e67a!8m2!3d10.231332!4d-67.9954623!16s%2Fg%2F11tp7qkc_0?entry=ttu&g_ep=EgoyMDI2MDYwMy4xIKXMDSoASAFQAw%3D%3D';
 
+/// Por debajo de este ancho la portada usa la foto vertical de móvil.
+const heroMobileBreakpoint = 600.0;
+
 class HeroSection extends StatefulWidget {
   const HeroSection({
     super.key,
     required this.weddingDate,
     required this.heroImageUrl,
+    required this.heroMobileImageUrl,
     required this.coupleNames,
     required this.isMusicPlaying,
     required this.isMusicBusy,
@@ -28,6 +32,7 @@ class HeroSection extends StatefulWidget {
 
   final DateTime weddingDate;
   final String heroImageUrl;
+  final String heroMobileImageUrl;
   final String coupleNames;
   final bool isMusicPlaying;
   final bool isMusicBusy;
@@ -89,6 +94,7 @@ class _HeroSectionState extends State<HeroSection>
     final namesSize = (width * 0.11).clamp(54.0, 104.0);
     final names = widget.coupleNames.split('&').map((s) => s.trim()).toList();
     final dateText = DateFormat('dd · MM · yyyy').format(widget.weddingDate);
+    final isMobile = width < heroMobileBreakpoint;
 
     return SizedBox(
       height: 680,
@@ -117,13 +123,18 @@ class _HeroSectionState extends State<HeroSection>
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    // La foto es vertical: en escritorio se recorta por
-                    // arriba y por abajo, y este encuadre deja las caras
-                    // sobre los nombres. En móvil se ve el alto completo.
+                    // Escritorio y móvil usan fotos distintas. En escritorio
+                    // la foto se recorta por arriba y por abajo, y este
+                    // encuadre deja las caras sobre los nombres; en móvil
+                    // se ve el alto completo y se centra en la pareja.
                     Image.asset(
-                      widget.heroImageUrl,
+                      isMobile
+                          ? widget.heroMobileImageUrl
+                          : widget.heroImageUrl,
                       fit: BoxFit.cover,
-                      alignment: const Alignment(0, -0.24),
+                      alignment: isMobile
+                          ? const Alignment(-0.2, -0.2)
+                          : const Alignment(0, -0.08),
                       filterQuality: FilterQuality.medium,
                     ),
                     DecoratedBox(

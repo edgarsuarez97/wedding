@@ -7,7 +7,8 @@ class WeddingContentRepository {
       WeddingContent(
         coupleNames: 'Gabriela & Edgar',
         weddingDate: DateTime(2027, 8, 28, 16),
-        heroImageUrl: 'assets/images/portada.jpg',
+        heroImageUrl: 'assets/images/portada-escritorio.jpg',
+        heroMobileImageUrl: 'assets/images/portada-movil.jpg',
         story:
             'Desde la primera conversación, en un lugar donde ninguno pensó que estaría ese día, hasta una vida entera llena de sorpresas, hemos crecido juntos amándonos entre risas, fe y aventura. Lo nuestro es inefable y eso nunca va a cambiar. Nos quedan muchísimas aventuras por vivir, y nos hace muy felices contar con ustedes, la familia y los amigos que han sido parte del camino, para dar el paso al matrimonio.',
         schedule: [
