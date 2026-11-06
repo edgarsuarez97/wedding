@@ -17,6 +17,10 @@ const _mapsUrl =
 /// Por debajo de este ancho la portada usa la foto vertical de móvil.
 const heroMobileBreakpoint = 600.0;
 
+/// La portada ocupa todo el alto de la pantalla, pero nunca menos que esto,
+/// para que nombres, fecha y lugar quepan en ventanas muy bajas.
+const _heroMinHeight = 560.0;
+
 class HeroSection extends StatefulWidget {
   const HeroSection({
     super.key,
@@ -51,6 +55,12 @@ class _HeroSectionState extends State<HeroSection>
   );
 
   bool _didConfigureMotionPreference = false;
+
+  // En el celular la barra del navegador aparece y desaparece al hacer
+  // scroll y cambia el alto de la ventana. Se guarda el primer alto para
+  // que la portada no salte; solo se recalcula si cambia el ancho (giro).
+  double? _heroHeight;
+  double? _heroHeightWidth;
 
   Animation<double> _step(double begin, double end) => CurvedAnimation(
     parent: _entranceController,
@@ -90,14 +100,20 @@ class _HeroSectionState extends State<HeroSection>
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.sizeOf(context).width;
+    final screen = MediaQuery.sizeOf(context);
+    final width = screen.width;
     final namesSize = (width * 0.11).clamp(54.0, 104.0);
     final names = widget.coupleNames.split('&').map((s) => s.trim()).toList();
     final dateText = DateFormat('dd · MM · yyyy').format(widget.weddingDate);
     final isMobile = width < heroMobileBreakpoint;
 
+    if (_heroHeight == null || _heroHeightWidth != width || !isMobile) {
+      _heroHeight = math.max(screen.height, _heroMinHeight);
+      _heroHeightWidth = width;
+    }
+
     return SizedBox(
-      height: 680,
+      height: _heroHeight,
       width: double.infinity,
       child: Stack(
         children: [
@@ -134,7 +150,7 @@ class _HeroSectionState extends State<HeroSection>
                       fit: BoxFit.cover,
                       alignment: isMobile
                           ? const Alignment(-0.2, -0.2)
-                          : const Alignment(0, -0.08),
+                          : Alignment.center,
                       filterQuality: FilterQuality.medium,
                     ),
                     DecoratedBox(
