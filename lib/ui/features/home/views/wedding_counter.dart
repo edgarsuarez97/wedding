@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -16,6 +17,10 @@ const _mapsUrl =
 
 /// Por debajo de este ancho la portada usa la foto vertical de móvil.
 const heroMobileBreakpoint = 600.0;
+
+/// La portada ocupa todo el alto de la pantalla, pero nunca menos que esto,
+/// para que nombres, fecha y lugar quepan en ventanas muy bajas.
+const _heroMinHeight = 560.0;
 
 class HeroSection extends StatefulWidget {
   const HeroSection({
@@ -51,6 +56,12 @@ class _HeroSectionState extends State<HeroSection>
   );
 
   bool _didConfigureMotionPreference = false;
+
+  // En el celular la barra del navegador aparece y desaparece al hacer
+  // scroll y cambia el alto de la ventana. Se guarda el primer alto para
+  // que la portada no salte; solo se recalcula si cambia el ancho (giro).
+  double? _heroHeight;
+  double? _heroHeightWidth;
 
   Animation<double> _step(double begin, double end) => CurvedAnimation(
     parent: _entranceController,
@@ -90,14 +101,20 @@ class _HeroSectionState extends State<HeroSection>
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.sizeOf(context).width;
+    final screen = MediaQuery.sizeOf(context);
+    final width = screen.width;
     final namesSize = (width * 0.11).clamp(54.0, 104.0);
     final names = widget.coupleNames.split('&').map((s) => s.trim()).toList();
     final dateText = DateFormat('dd · MM · yyyy').format(widget.weddingDate);
     final isMobile = width < heroMobileBreakpoint;
 
+    if (_heroHeight == null || _heroHeightWidth != width || !isMobile) {
+      _heroHeight = math.max(screen.height, _heroMinHeight);
+      _heroHeightWidth = width;
+    }
+
     return SizedBox(
-      height: 680,
+      height: _heroHeight,
       width: double.infinity,
       child: Stack(
         children: [
@@ -123,19 +140,12 @@ class _HeroSectionState extends State<HeroSection>
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    // Escritorio y móvil usan fotos distintas. En escritorio
-                    // la foto se recorta por arriba y por abajo, y este
-                    // encuadre deja las caras sobre los nombres; en móvil
-                    // se ve el alto completo y se centra en la pareja.
-                    Image.asset(
-                      isMobile
+                    // Escritorio y móvil usan fotos distintas, ambas
+                    // centradas en la pareja.
+                    _HeroPhoto(
+                      asset: isMobile
                           ? widget.heroMobileImageUrl
                           : widget.heroImageUrl,
-                      fit: BoxFit.cover,
-                      alignment: isMobile
-                          ? const Alignment(-0.2, -0.2)
-                          : const Alignment(0, -0.08),
-                      filterQuality: FilterQuality.medium,
                     ),
                     DecoratedBox(
                       decoration: BoxDecoration(
@@ -264,6 +274,66 @@ class _HeroSectionState extends State<HeroSection>
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Foto de la portada. En pantallas muy anchas (monitores ultra anchos) la
+/// foto llenaría todo el ancho y se recortaría tanto que se perderían las
+/// caras, así que se limita a una proporción máxima y los lados se rellenan
+/// con la misma foto desenfocada, fundida con la nítida.
+class _HeroPhoto extends StatelessWidget {
+  const _HeroPhoto({required this.asset});
+
+  final String asset;
+
+  static const _maxAspectRatio = 1.9;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final photo = Image.asset(
+          asset,
+          fit: BoxFit.cover,
+          filterQuality: FilterQuality.medium,
+        );
+        final height = constraints.maxHeight;
+        if (constraints.maxWidth / height <= _maxAspectRatio) {
+          return photo;
+        }
+
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            ImageFiltered(
+              imageFilter: ui.ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+              child: Image.asset(asset, fit: BoxFit.cover),
+            ),
+            Center(
+              child: SizedBox(
+                width: height * _maxAspectRatio,
+                height: height,
+                child: ShaderMask(
+                  blendMode: BlendMode.dstIn,
+                  shaderCallback: (bounds) {
+                    return const LinearGradient(
+                      colors: [
+                        Colors.transparent,
+                        Colors.white,
+                        Colors.white,
+                        Colors.transparent,
+                      ],
+                      stops: [0, 0.08, 0.92, 1],
+                    ).createShader(bounds);
+                  },
+                  child: photo,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
