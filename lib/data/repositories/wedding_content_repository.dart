@@ -10,36 +10,33 @@ class WeddingContentRepository {
         heroImageUrl: 'assets/images/portada-escritorio.jpg',
         heroMobileImageUrl: 'assets/images/portada-movil.jpg',
         story:
-            'Desde la primera conversación, en un lugar donde ninguno pensó que estaría ese día, hasta una vida entera llena de sorpresas, hemos crecido juntos amándonos entre risas, fe y aventura. Lo nuestro es inefable y eso nunca va a cambiar. Nos quedan muchísimas aventuras por vivir, y nos hace muy felices contar con ustedes, la familia y los amigos que han sido parte del camino, para dar el paso al matrimonio.',
+            'Desde nuestra primera conversación, en un lugar donde ninguno pensó que estaría ese día, a una promesa de una vida entera, hemos crecido juntos amándonos entre risas y aventura. Nos quedan muchísimas aventuras por vivir, y nos hace muy felices contar con ustedes en esta ocasión, la familia y los amigos que han sido parte del camino.',
         schedule: [
           ScheduleItem(
-            timeLabel: '3:30 PM',
-            title: 'Llegada de invitados y bienvenida en el jardín',
+            timeLabel: '3:00 PM',
+            title: 'Llegada de invitados',
             description:
-                'Limonada de la casa, cuerdas acústicas y acomodo de invitados.',
+                'Bebidas de bienvenida y acomodo de invitados.',
           ),
           ScheduleItem(
             timeLabel: '4:00 PM',
             title: 'Ceremonia',
-            description: 'Votos e intercambio de anillos en la Terraza Rosa.',
+            description: 'Votos e intercambio de anillos en la terraza.',
           ),
           ScheduleItem(
             timeLabel: '5:00 PM',
             title: 'Hora del cóctel',
-            description:
-                'Botanas al centro y jazz en vivo bajo los árboles iluminados.',
+            description: 'Abrebocas y fotos grupales.',
           ),
           ScheduleItem(
-            timeLabel: '6:30 PM',
+            timeLabel: '7:00 PM',
             title: 'Recepción y cena',
-            description:
-                'Cena de tres tiempos y brindis emotivos en el Gran Salón.',
+            description: 'Cena y brindis.',
           ),
           ScheduleItem(
             timeLabel: '8:15 PM',
             title: 'Primer baile y celebración',
-            description:
-                'Baile, mesa de postres y carrito de café de medianoche.',
+            description: 'Bailaremos hasta que el cuerpo aguante.',
           ),
         ],
         galleryImageUrls: [
