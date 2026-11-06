@@ -125,16 +125,37 @@ class _HeroSectionState extends State<HeroSection>
               child: ShaderMask(
                 blendMode: BlendMode.dstIn,
                 shaderCallback: (bounds) {
+                  if (isMobile) {
+                    return const LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.white,
+                        Colors.white,
+                        Colors.white,
+                        Colors.transparent,
+                      ],
+                      stops: [0, 0.62, 0.84, 1],
+                    ).createShader(bounds);
+                  }
+                  // En escritorio el fundido empieza antes y sigue una curva
+                  // suave, para que la foto se disuelva en el papel sin que
+                  // se note dónde termina la portada.
                   return const LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
                       Colors.white,
                       Colors.white,
-                      Colors.white,
+                      Color(0xF0FFFFFF),
+                      Color(0xC8FFFFFF),
+                      Color(0x8CFFFFFF),
+                      Color(0x50FFFFFF),
+                      Color(0x22FFFFFF),
+                      Color(0x08FFFFFF),
                       Colors.transparent,
                     ],
-                    stops: [0, 0.62, 0.84, 1],
+                    stops: [0, 0.52, 0.6, 0.68, 0.76, 0.84, 0.91, 0.96, 1],
                   ).createShader(bounds);
                 },
                 child: Stack(
@@ -170,7 +191,10 @@ class _HeroSectionState extends State<HeroSection>
           ),
           // Las hojas se desvanecen solas al llegar al borde inferior.
           Positioned.fill(
-            child: FallingLeaves(count: width < 600 ? 14 : 24, fadeFrom: 0.84),
+            child: FallingLeaves(
+              count: width < 600 ? 14 : 24,
+              fadeFrom: isMobile ? 0.84 : 0.6,
+            ),
           ),
           Positioned(
             top: 0,
@@ -312,9 +336,18 @@ class _HeroPhoto extends StatelessWidget {
         return Stack(
           fit: StackFit.expand,
           children: [
-            ImageFiltered(
-              imageFilter: ui.ImageFilter.blur(sigmaX: 30, sigmaY: 30),
-              child: Image.asset(asset, fit: BoxFit.cover),
+            // El desenfoque se derrama fuera de sus bordes y ese derrame
+            // escapa del fundido de la portada: se recorta para que no
+            // aparezca una franja de foto sobre la sección siguiente.
+            ClipRect(
+              child: ImageFiltered(
+                imageFilter: ui.ImageFilter.blur(
+                  sigmaX: 30,
+                  sigmaY: 30,
+                  tileMode: TileMode.clamp,
+                ),
+                child: Image.asset(asset, fit: BoxFit.cover),
+              ),
             ),
             Center(
               child: SizedBox(
