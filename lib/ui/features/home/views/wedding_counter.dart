@@ -117,9 +117,13 @@ class _HeroSectionState extends State<HeroSection>
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    Image.network(
+                    // La foto es vertical: en escritorio se recorta por
+                    // arriba y por abajo, y este encuadre deja las caras
+                    // sobre los nombres. En móvil se ve el alto completo.
+                    Image.asset(
                       widget.heroImageUrl,
                       fit: BoxFit.cover,
+                      alignment: const Alignment(0, -0.24),
                       filterQuality: FilterQuality.medium,
                     ),
                     DecoratedBox(
@@ -782,7 +786,7 @@ class _VinylDisc extends StatelessWidget {
                 'assets/illustrations/vinyl-label.jpg',
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
-                  return Image.network(
+                  return Image.asset(
                     labelImageUrl,
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
