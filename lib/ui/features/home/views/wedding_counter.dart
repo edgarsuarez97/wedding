@@ -140,12 +140,16 @@ class _HeroSectionState extends State<HeroSection>
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    // Escritorio y móvil usan fotos distintas, ambas
-                    // centradas en la pareja.
+                    // Escritorio y móvil usan fotos distintas. En móvil la
+                    // foto se corre un poco a la derecha para que la pareja,
+                    // uno a cada lado de la puerta, quepa completa.
                     _HeroPhoto(
                       asset: isMobile
                           ? widget.heroMobileImageUrl
                           : widget.heroImageUrl,
+                      alignment: isMobile
+                          ? const Alignment(0.16, 0)
+                          : Alignment.center,
                     ),
                     DecoratedBox(
                       decoration: BoxDecoration(
@@ -283,9 +287,10 @@ class _HeroSectionState extends State<HeroSection>
 /// caras, así que se limita a una proporción máxima y los lados se rellenan
 /// con la misma foto desenfocada, fundida con la nítida.
 class _HeroPhoto extends StatelessWidget {
-  const _HeroPhoto({required this.asset});
+  const _HeroPhoto({required this.asset, required this.alignment});
 
   final String asset;
+  final Alignment alignment;
 
   static const _maxAspectRatio = 1.9;
 
@@ -296,6 +301,7 @@ class _HeroPhoto extends StatelessWidget {
         final photo = Image.asset(
           asset,
           fit: BoxFit.cover,
+          alignment: alignment,
           filterQuality: FilterQuality.medium,
         );
         final height = constraints.maxHeight;
