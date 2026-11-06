@@ -193,7 +193,12 @@ class _WeddingExperienceState extends State<WeddingExperience> {
 
   final _dressCodeKey = GlobalKey();
 
-  Widget _pair(bool isDesktop, Widget first, Widget second) {
+  Widget _pair(
+    bool isDesktop,
+    Widget first,
+    Widget second, {
+    double mobileGap = 28,
+  }) {
     if (isDesktop) {
       return Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -215,7 +220,7 @@ class _WeddingExperienceState extends State<WeddingExperience> {
     return Column(
       children: [
         ScrollReveal(from: RevealFrom.left, child: first),
-        const SizedBox(height: 28),
+        SizedBox(height: mobileGap),
         ScrollReveal(from: RevealFrom.right, child: second),
       ],
     );
@@ -279,6 +284,9 @@ class _WeddingExperienceState extends State<WeddingExperience> {
                             isDesktop,
                             StorySection(story: widget.content.story),
                             ScheduleSection(schedule: widget.content.schedule),
+                            // En móvil las tarjetas van apiladas: más aire
+                            // entre la historia y el itinerario.
+                            mobileGap: 64,
                           ),
                         ),
                       ),
