@@ -71,6 +71,7 @@ flutter:
   assets:
     - assets/audio/wedding_song.mp3
     - assets/images/
+    - assets/images/galeria/
     - assets/illustrations/paper_texture.jpg
     - assets/illustrations/vinyl-label.jpg
     - assets/illustrations/watercolor/

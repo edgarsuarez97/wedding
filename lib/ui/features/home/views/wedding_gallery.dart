@@ -54,6 +54,20 @@ class _PolaroidCarouselState extends State<_PolaroidCarousel>
 
   bool get _hasMultiple => widget.images.length > 1;
 
+  /// Siempre hay como máximo [_maxDots] puntos, sin importar cuántas fotos
+  /// haya: cada punto representa un grupo de fotos seguidas (con 16 fotos,
+  /// 4 por punto). Así agregar fotos no alarga la fila de puntos.
+  static const _maxDots = 4;
+
+  int get _dotCount =>
+      widget.images.length < _maxDots ? widget.images.length : _maxDots;
+
+  /// Punto activo para la foto actual.
+  int get _activeDot => _currentIndex * _dotCount ~/ widget.images.length;
+
+  /// Primera foto del grupo que representa el punto [dot].
+  int _firstPhotoOf(int dot) => (dot * widget.images.length / _dotCount).ceil();
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -92,7 +106,7 @@ class _PolaroidCarouselState extends State<_PolaroidCarousel>
   }
 
   ImageProvider _provider(int index) => ResizeImage(
-    NetworkImage(widget.images[index % widget.images.length]),
+    AssetImage(widget.images[index % widget.images.length]),
     width: _decodeWidth.round(),
     policy: ResizeImagePolicy.fit,
   );
@@ -233,18 +247,13 @@ class _PolaroidCarouselState extends State<_PolaroidCarousel>
                       _show(_currentIndex - 1 + widget.images.length),
                 ),
                 const SizedBox(width: 16),
-                for (var i = 0; i < widget.images.length; i++)
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    margin: const EdgeInsets.symmetric(horizontal: 4),
-                    width: i == _currentIndex ? 12 : 9,
-                    height: i == _currentIndex ? 12 : 9,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: i == _currentIndex
-                          ? AppTheme.bubblegum
-                          : AppTheme.mint,
-                    ),
+                for (var dot = 0; dot < _dotCount; dot++)
+                  _PageDot(
+                    active: dot == _activeDot,
+                    label:
+                        'Fotos ${_firstPhotoOf(dot) + 1} a '
+                        '${dot + 1 < _dotCount ? _firstPhotoOf(dot + 1) : widget.images.length}',
+                    onTap: () => _show(_firstPhotoOf(dot)),
                   ),
                 const SizedBox(width: 16),
                 _ArrowButton(
@@ -257,6 +266,50 @@ class _PolaroidCarouselState extends State<_PolaroidCarousel>
           ],
         );
       },
+    );
+  }
+}
+
+/// Punto de la paginación; tocarlo salta a la primera foto de su grupo.
+class _PageDot extends StatelessWidget {
+  const _PageDot({
+    required this.active,
+    required this.label,
+    required this.onTap,
+  });
+
+  final bool active;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      selected: active,
+      label: label,
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
+          child: SizedBox(
+            width: 12,
+            height: 12,
+            child: Center(
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                width: active ? 12 : 9,
+                height: active ? 12 : 9,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: active ? AppTheme.bubblegum : AppTheme.mint,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
