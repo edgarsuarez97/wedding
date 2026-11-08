@@ -162,14 +162,14 @@ class _HeroSectionState extends State<HeroSection>
                   fit: StackFit.expand,
                   children: [
                     // Escritorio y móvil usan fotos distintas. En móvil la
-                    // foto se corre un poco a la derecha para que la pareja,
-                    // uno a cada lado de la puerta, quepa completa.
+                    // foto se corre un poco a la izquierda para que la
+                    // pareja, bajo el arco azul, quede justo en el centro.
                     _HeroPhoto(
                       asset: isMobile
                           ? widget.heroMobileImageUrl
                           : widget.heroImageUrl,
                       alignment: isMobile
-                          ? const Alignment(0.16, 0)
+                          ? const Alignment(-0.16, 0)
                           : Alignment.center,
                     ),
                     DecoratedBox(
